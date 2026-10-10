@@ -1,4 +1,4 @@
-# 필수
+# 필수 (Python 3.9 이상)
 Pillow>=10.1
 # 선택: 로컬 무료 OCR (Tesseract 본체는 별도 설치 필요)
 # pytesseract>=0.3.10

@@ -10,20 +10,15 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
-
 from . import winenv
 from .config import load_config
-from .extractors import RoiOcrExtractor, VisionExtractor
-from .extractors.roi_ocr import roi_box, tesseract_available
-from .frame_check import check_frame
-from .llm import DEFAULT_MODELS, make_llm
-from .observer import Observer
-from .sources import SourceError, make_source
 from .state import CONFLICT, OBSERVED, REJECTED, STALE
 
+# Pillow-dependent modules are imported inside the commands that need them,
+# so `install` and `windows` work before `pip install -r requirements.txt`.
 
 def _source(cfg):
+    from .sources import make_source
     return make_source(cfg["source"], cfg["window_title_pattern"], cfg["window_exe"], cfg["capture_method"])
 
 
@@ -33,6 +28,12 @@ def _stamp() -> str:
 
 # ------------------------------------------------------------------ doctor --
 def cmd_doctor(cfg, args) -> int:
+    from PIL import Image
+
+    from .extractors.roi_ocr import tesseract_available
+    from .frame_check import check_frame
+    from .sources import SourceError, make_source
+
     out_dir = Path(cfg["runs_dir"]) / f"doctor-{_stamp()}"
     out_dir.mkdir(parents=True, exist_ok=True)
     rep: dict = {"platform": platform.platform(), "python": sys.version.split()[0],
@@ -48,7 +49,7 @@ def cmd_doctor(cfg, args) -> int:
         else:
             print("game window: NOT FOUND (is SimCity 3000 running? see `python -m mayor windows`)")
     else:
-        print("game window: (not Windows — window discovery unavailable)")
+        print("game window: (not Windows - window discovery unavailable)")
 
     methods = ["rect", "hwnd"] if (winenv.IS_WINDOWS and cfg["source"] == "window") else [cfg["capture_method"]]
     rep["capture"] = {}
@@ -122,7 +123,9 @@ def cmd_windows(cfg, args) -> int:
 
 
 # --------------------------------------------------------------- calibrate --
-def draw_grid(img: Image.Image, step: float = 0.05) -> Image.Image:
+def draw_grid(img, step: float = 0.05):
+    from PIL import ImageDraw, ImageFont
+
     g = img.convert("RGB").copy()
     d = ImageDraw.Draw(g)
     font = ImageFont.load_default(size=max(12, img.height // 40))
@@ -143,6 +146,11 @@ def draw_grid(img: Image.Image, step: float = 0.05) -> Image.Image:
 
 
 def cmd_calibrate(cfg, args) -> int:
+    from PIL import ImageDraw
+
+    from .extractors.roi_ocr import roi_box
+    from .sources import SourceError
+
     out_dir = Path(cfg["runs_dir"]) / f"calibrate-{_stamp()}"
     out_dir.mkdir(parents=True, exist_ok=True)
     try:
@@ -196,6 +204,10 @@ def _header() -> str:
 
 
 def cmd_observe(cfg, args) -> int:
+    from .extractors import RoiOcrExtractor, VisionExtractor
+    from .llm import DEFAULT_MODELS, make_llm
+    from .observer import Observer
+
     if args.source:
         cfg["source"] = args.source
     if args.extract is not None:
@@ -256,7 +268,12 @@ def cmd_report(cfg, args) -> int:
 
 
 def main(argv=None) -> int:
-    p = argparse.ArgumentParser(prog="mayor", description="SimCity 3000 AI Mayor — observer prototype")
+    for stream in (sys.stdout, sys.stderr):  # never crash on a console that can't show a character
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
+    p = argparse.ArgumentParser(prog="mayor", description="SimCity 3000 AI Mayor - observer prototype")
     p.add_argument("--config", help="config JSON (default: ./config.json if present)")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("doctor", help="check environment, find the game window, test one capture")
@@ -276,5 +293,12 @@ def main(argv=None) -> int:
     r.add_argument("run", help="run directory or log.jsonl")
     args = p.parse_args(argv)
     cfg = load_config(args.config)
-    return {"doctor": cmd_doctor, "windows": cmd_windows, "install": cmd_install, "calibrate": cmd_calibrate,
-            "observe": cmd_observe, "report": cmd_report}[args.cmd](cfg, args)
+    cmd = {"doctor": cmd_doctor, "windows": cmd_windows, "install": cmd_install, "calibrate": cmd_calibrate,
+           "observe": cmd_observe, "report": cmd_report}[args.cmd]
+    try:
+        return cmd(cfg, args)
+    except ModuleNotFoundError as e:
+        if e.name != "PIL":
+            raise
+        print("Pillow is not installed. Run this first, in this folder:\n    python -m pip install -r requirements.txt")
+        return 1
