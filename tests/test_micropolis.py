@@ -1,0 +1,132 @@
+"""Micropolis mayor: pure logic always; engine-backed tests when the engine is built
+(bash tools/setup_micropolis.sh, or MICROPOLIS_ENGINE_DIR)."""
+
+import json
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+from mayor.llm.mock import MockLLM
+from mayor.micropolis.review import LLMReviewer, Review, ReviewContext, RuleReviewer, direction, evaluate
+from mayor.micropolis.strategy import Strategy, choose_zone
+
+try:
+    from mayor.micropolis.engine import City, demand_caps, engine_dir
+    engine_dir()
+    HAVE_ENGINE = True
+except Exception:  # engine not built here
+    HAVE_ENGINE = False
+
+STATS = {"funds": 5000.0, "population": 4000.0, "res_valve": 1000.0, "com_valve": 750.0, "ind_valve": -100.0,
+         "city_tax": 7.0, "cash_flow": 0.0, "crime_avg": 60.0, "pollution_avg": 40.0, "land_value_avg": 70.0,
+         "traffic_avg": 20.0, "city_score": 600.0, "powered_zones": 20.0, "unpowered_zones": 0.0,
+         "police_stations": 1.0, "fire_stations": 1.0, "coal_plants": 1.0, "nuclear_plants": 0.0,
+         "road_total": 100.0, "assessed_value": 0.0, "res_pop": 300.0, "com_pop": 20.0, "ind_pop": 10.0,
+         "stadiums": 0.0, "seaports": 0.0, "airports": 0.0, "road_effect": 32.0, "police_effect": 1000.0,
+         "fire_effect": 1000.0}
+
+
+def ctx(**over):
+    st = dict(STATS, **over)
+    hist = [dict(st, date=f"1901-{m:02d}") for m in range(1, 13)]
+    return ReviewContext("1902-01", st, hist, Strategy(), {"residential": 10}, [], [])
+
+
+class StrategyTests(unittest.TestCase):
+    def test_from_dict_clamps_and_reports(self):
+        s, notes = Strategy.from_dict({"tax_rate": 55, "zone_mix": {"residential": 2, "commercial": 1, "industrial": 1},
+                                       "power_type": "solar", "land_use": "separated", "max_builds_per_month": "x"})
+        self.assertEqual(s.tax_rate, 20)
+        self.assertEqual(s.zone_mix, {"residential": 0.5, "commercial": 0.25, "industrial": 0.25})
+        self.assertEqual(s.land_use, "separated")
+        self.assertEqual(s.power_type, "coal")
+        self.assertEqual(len(notes), 3)  # tax clamped, power_type rejected, builds not a number
+
+    def test_choose_zone_follows_target_share_and_demand(self):
+        s = Strategy(zone_mix={"residential": 0.5, "commercial": 0.5, "industrial": 0.0})
+        self.assertEqual(choose_zone(s, STATS, {"residential": 5, "commercial": 1}), "commercial")
+        self.assertEqual(choose_zone(s, STATS, {"residential": 1, "commercial": 5}), "residential")
+        none = dict(STATS, res_valve=-1, com_valve=-1, ind_valve=0)
+        self.assertIsNone(choose_zone(s, none, {}))  # never builds against negative demand
+
+
+class ReviewTests(unittest.TestCase):
+    def test_direction_and_evaluate(self):
+        self.assertEqual(direction(100, 110), "up")
+        self.assertEqual(direction(100, 101), "flat")
+        self.assertEqual(direction(0, -5), "down")
+        prev = Review("1901-01", "rules", {}, [], {"population": "up", "funds": "down", "bogus": "up"},
+                      stats_at_review={"population": 1000, "funds": 5000})
+        ev = evaluate(prev, {"population": 1500, "funds": 5000})
+        self.assertEqual([r["hit"] for r in ev["rows"]], [True, False])
+        self.assertEqual(ev["score"], 0.5)
+
+    def test_rule_reviewer_raises_tax_when_construction_stalls(self):
+        rv = RuleReviewer().review(ctx(funds=500.0))
+        self.assertEqual(rv.strategy["tax_rate"], 8)
+        self.assertTrue(any("세율" in w for w in rv.reasoning))
+
+    def test_llm_reviewer_applies_valid_json(self):
+        reply = {"strategy": {"tax_rate": 9, "land_use": "separated"}, "reasoning": ["자금 부족"],
+                 "expected": {"funds": "up", "made_up": "up"}, "uncertainties": ["모름"]}
+        llm = MockLLM(response=reply)
+        rv = LLMReviewer(llm).review(ctx())
+        self.assertEqual((rv.strategy["tax_rate"], rv.strategy["land_use"]), (9, "separated"))
+        self.assertEqual(rv.expected, {"funds": "up"})
+        self.assertIn("MEASURED NOW", llm.calls[0])
+
+    def test_llm_garbage_falls_back_to_rules(self):
+        rv = LLMReviewer(MockLLM(response="I like trains")).review(ctx())
+        self.assertEqual(rv.source, "rules (llm failed)")
+        self.assertTrue(rv.notes)
+
+
+@unittest.skipUnless(HAVE_ENGINE, "Micropolis engine not built")
+class EngineTests(unittest.TestCase):
+    def test_power_zones_specials(self):
+        from mayor.micropolis.planner import Planner
+        c = City(seed=1)
+        c.e.set_funds(100000)
+        p = Planner(c)
+        self.assertTrue(p.build_power("coal").ok)
+        self.assertTrue(p.build_special("seaport").ok)          # works without the stadium in between
+        for _ in range(4):
+            self.assertTrue(p.place("residential").ok)
+        for _ in range(3):
+            c.advance_month()
+        s = c.stats()
+        self.assertEqual((s["unpowered_zones"], s["seaports"]), (0, 1))
+        p.reserve = 10 ** 9
+        r = p.place("commercial")
+        self.assertEqual(r.status, "skipped")
+
+    def test_demand_caps_match_engine_rule(self):
+        self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
+
+    def test_run_and_report(self):
+        from mayor.micropolis.report import make_report
+        from mayor.micropolis.run import run_mayor
+        with tempfile.TemporaryDirectory() as d:
+            res = run_mayor(years=2, seed=3, out_dir=d)
+            self.assertEqual(len(res.months), 24)
+            out = make_report(res.run_dir)
+            page = Path(out["index"]).read_text(encoding="utf-8")
+            self.assertIn("<title>AI 시장의 도시 운영 기록</title>", page)
+            self.assertTrue((res.run_dir / "saves" / "final.cty").exists())
+            if shutil.which("ffmpeg"):
+                self.assertEqual(out["video"], "video.mp4")
+            frag = Path(out["artifact"]).read_text(encoding="utf-8")
+            self.assertNotIn("<body", frag)
+            self.assertEqual(json.loads((res.run_dir / "summary.json").read_text())["years"], 2)
+
+    def test_deterministic(self):
+        from mayor.micropolis.run import run_mayor
+        with tempfile.TemporaryDirectory() as d:
+            a = run_mayor(years=3, seed=5, out_dir=Path(d) / "a").months[-1]["stats"]
+            b = run_mayor(years=3, seed=5, out_dir=Path(d) / "b").months[-1]["stats"]
+        self.assertEqual(a, b)
+
+
+if __name__ == "__main__":
+    unittest.main()

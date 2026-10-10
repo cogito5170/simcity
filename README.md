@@ -1,6 +1,11 @@
 # SimCity 3000 — AI Mayor
 
 AI가 도시를 **관찰 → 판단 → 행동 → 평가**하며 스스로 운영하는 실험 프로젝트입니다.
+
+> **지금의 주 실험장은 Micropolis(SimCity Classic 엔진)입니다.** 실행 방법, 모니터링, 실험 결과는
+> [`docs/MICROPOLIS.md`](docs/MICROPOLIS.md)에 있습니다. 예시 보고서는 `showcase/micropolis-seed2/index.html`을
+> 브라우저로 열면 됩니다 (성장 영상, 차트, 시장의 판단 기록 포함).
+> 아래 내용은 처음 시작한 SimCity 3000 화면 관찰 도구에 대한 설명입니다.
 지금은 **1단계: 관찰과 기록**만 구현되어 있습니다. 게임에 입력을 보내는 코드는 아직 없습니다.
 
 > 실제로 확인한 것과 아직 확인하지 못한 것의 구분은 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)에 있습니다.

@@ -298,6 +298,41 @@ def cmd_observe(cfg, args) -> int:
     return 0
 
 
+# -------------------------------------------------------------- micropolis --
+def cmd_micropolis(cfg, args) -> int:
+    from .micropolis.engine import EngineNotFound
+    from .micropolis.report import make_report
+    from .micropolis.review import LLMReviewer, RuleReviewer
+    from .micropolis.run import run_mayor
+    if args.report_only:
+        out = make_report(args.report_only)
+        print(f"report: {out['index']}")
+        return 0
+    reviewer = RuleReviewer()
+    if args.reviewer == "llm":
+        from .llm import make_llm
+        lc = cfg["llm"]
+        reviewer = LLMReviewer(make_llm(args.provider or lc["provider"], args.model or lc["model"],
+                                        response_file=lc.get("mock_response_file")))
+    print(f"running {args.years} game years, seed {args.seed}, reviewer {getattr(reviewer, 'name', 'rules')} ...")
+
+    def show(m):
+        if m["reviewed"] or m["date"].endswith("-01"):
+            s = m["stats"]
+            print(f"  {m['date']}  pop {s['population']:>8,.0f}  funds {s['funds']:>8,.0f}  tax {m['tax_rate']:>2}%"
+                  + ("  [review]" if m["reviewed"] else ""), flush=True)
+    try:
+        res = run_mayor(years=args.years, seed=args.seed, reviewer=reviewer, review_every=args.review_every,
+                        out_dir=Path(cfg["runs_dir"]), engine_dir=args.engine_dir, on_month=show)
+    except EngineNotFound as e:
+        print(e)
+        return 1
+    print("rendering video and report ...", flush=True)
+    out = make_report(res.run_dir)
+    print(f"\nopen in a browser: {out['index']}\nvideo: {res.run_dir / (out['video'] or 'poster.png')}")
+    return 0
+
+
 # ------------------------------------------------------------------ report --
 def cmd_report(cfg, args) -> int:
     path = Path(args.run)
@@ -335,12 +370,21 @@ def main(argv=None) -> int:
     o.add_argument("--interval", type=float)
     o.add_argument("--once", action="store_true")
     o.add_argument("--max-ticks", type=int)
+    mp = sub.add_parser("micropolis", help="run the AI mayor in Micropolis and build a video + report")
+    mp.add_argument("--years", type=int, default=20)
+    mp.add_argument("--seed", type=int, default=1)
+    mp.add_argument("--reviewer", choices=["rules", "llm"], default="rules")
+    mp.add_argument("--provider", help="anthropic | gemini | openai | mock (with --reviewer llm)")
+    mp.add_argument("--model")
+    mp.add_argument("--review-every", type=int, default=12, help="months between strategy reviews")
+    mp.add_argument("--engine-dir", help="gymtropolis checkout (default: third_party/gymtropolis)")
+    mp.add_argument("--report-only", metavar="RUN_DIR", help="rebuild video/report for an existing run")
     r = sub.add_parser("report", help="print the state timeline of a run")
     r.add_argument("run", help="run directory or log.jsonl")
     args = p.parse_args(argv)
     cfg = load_config(args.config)
     cmd = {"doctor": cmd_doctor, "windows": cmd_windows, "install": cmd_install, "calibrate": cmd_calibrate,
-           "observe": cmd_observe, "report": cmd_report}[args.cmd]
+           "observe": cmd_observe, "report": cmd_report, "micropolis": cmd_micropolis}[args.cmd]
     try:
         return cmd(cfg, args)
     except ModuleNotFoundError as e:
