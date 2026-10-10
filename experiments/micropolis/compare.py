@@ -76,15 +76,16 @@ def main():
         if calls:
             known = [c for c in cost if c]
             usage[label] = (statistics.mean(calls), statistics.mean(toks), statistics.mean(known) if known else None)
-    print("| 시장 | " + " | ".join(f"seed {s}" for s in a.seeds) + " | 평균 최종 | 중앙값 | 평균 정점 | 예측 적중률 |")
-    print("|---|" + "---|" * (len(a.seeds) + 4))
+    print("| 시장 | " + " | ".join(f"seed {s}" for s in a.seeds) + " | 평균 최종 | 중앙값 | 평균 정점 | 20년 평균 인구 | 예측 적중률 |")
+    print("|---|" + "---|" * (len(a.seeds) + 5))
     for name, per in table.items():
         cells = [f"{per[s]['final']:,.0f}" if s in per else "—" for s in a.seeds]
         got = [per[s] for s in a.seeds if s in per]
         hits = [g["hit"] for g in got if g["hit"] is not None]
         print(f"| {name} | " + " | ".join(cells) +
               f" | {statistics.mean(g['final'] for g in got):,.0f} | {statistics.median(g['final'] for g in got):,.0f}"
-              f" | {statistics.mean(g['peak'] for g in got):,.0f} | {f'{statistics.mean(hits):.0%}' if hits else '—'} |")
+              f" | {statistics.mean(g['peak'] for g in got):,.0f} | {statistics.mean(g['mean'] for g in got):,.0f}"
+              f" | {f'{statistics.mean(hits):.0%}' if hits else '—'} |")
     if usage:
         print("\n| LLM 그룹 | 실행당 호출 | 실행당 토큰 | 실행당 정가 환산 |\n|---|---|---|---|")
         for label, (c, t, usd) in usage.items():
