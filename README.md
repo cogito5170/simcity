@@ -11,6 +11,7 @@ AI가 도시를 **관찰 → 판단 → 행동 → 평가**하며 스스로 운�
 | 명령 | 하는 일 |
 |---|---|
 | `python -m mayor doctor` | 환경 점검: 게임 창 찾기, 캡처 1장 시험, 검은 화면 여부, OCR/API 키 확인 |
+| `python -m mayor install "<게임 폴더>"` | 설치 폴더 점검(읽기 전용): 판본(원판/Unlimited), GZCOM 플러그인 지원 흔적, 파일 빌드 정보 |
 | `python -m mayor windows` | 열려 있는 모든 창(제목·exe·크기) 나열. 게임 창 이름이 예상과 다를 때 사용 |
 | `python -m mayor calibrate` | 현재 화면 + 좌표 격자 이미지 저장. OCR 영역(ROI)을 잡는 데 사용 |
 | `python -m mayor observe` | 주기적으로 관찰하고 `runs/run-*/log.jsonl`에 도시 상태 기록 |

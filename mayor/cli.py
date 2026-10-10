@@ -84,6 +84,31 @@ def cmd_doctor(cfg, args) -> int:
     return 0
 
 
+# ----------------------------------------------------------------- install --
+def cmd_install(cfg, args) -> int:
+    from .install_info import inspect_install
+    try:
+        rep = inspect_install(args.folder)
+    except FileNotFoundError as e:
+        print(e)
+        return 1
+    print(f"folder  : {rep.root}\nexe     : {rep.exe}\nedition : {rep.edition_guess}")
+    if rep.modules:
+        print(f"\n{'module':<34} {'size':>11} {'built':<10} gzcom")
+        for m in rep.modules:
+            built = m.pe.built if m.pe else (m.error or "?")
+            print(f"{m.path[-34:]:<34} {m.size:>11,} {built:<10} {'yes' if m.gzcom else ''}")
+    print("\nfindings:")
+    for f in rep.findings:
+        print(f"  - {f}")
+    out_dir = Path(cfg["runs_dir"])
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"install-{_stamp()}.json"
+    out.write_text(json.dumps(rep.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"\nreport  : {out}  (contains file hashes only, no game data)")
+    return 0
+
+
 # ----------------------------------------------------------------- windows --
 def cmd_windows(cfg, args) -> int:
     if not winenv.IS_WINDOWS:
@@ -236,6 +261,8 @@ def main(argv=None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("doctor", help="check environment, find the game window, test one capture")
     sub.add_parser("windows", help="list all visible windows (Windows only)")
+    i = sub.add_parser("install", help="inspect the game's install folder (edition, GZCOM plugin support)")
+    i.add_argument("folder", help='e.g. "C:\\Program Files\\Maxis\\SimCity 3000"')
     sub.add_parser("calibrate", help="save a frame + coordinate grid (+ ROI crops) to set up OCR regions")
     o = sub.add_parser("observe", help="observe the city and record its state")
     o.add_argument("--source", help="window | screen | file:PATH")
@@ -249,5 +276,5 @@ def main(argv=None) -> int:
     r.add_argument("run", help="run directory or log.jsonl")
     args = p.parse_args(argv)
     cfg = load_config(args.config)
-    return {"doctor": cmd_doctor, "windows": cmd_windows, "calibrate": cmd_calibrate,
+    return {"doctor": cmd_doctor, "windows": cmd_windows, "install": cmd_install, "calibrate": cmd_calibrate,
             "observe": cmd_observe, "report": cmd_report}[args.cmd](cfg, args)
