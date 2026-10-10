@@ -151,34 +151,6 @@ def find_game_exe(root: Path, max_depth: int = 3) -> Path | None:
     return hits[0] if hits else None
 
 
-def default_search_roots() -> list[Path]:
-    """Usual install locations on Windows (plus whatever the environment says)."""
-    roots: list[str] = []
-    for var in ("ProgramFiles(x86)", "ProgramFiles", "ProgramW6432"):
-        if os.environ.get(var):
-            roots.append(os.environ[var])
-    for drive in ("C:", "D:", "E:"):
-        roots += [drive + "\\Games", drive + "\\Maxis", drive + "\\SimCity 3000", drive + "\\SimCity 3000 Unlimited"]
-    seen, out = set(), []
-    for r in roots:
-        p = Path(r)
-        if p.is_dir() and str(p).lower() not in seen:
-            seen.add(str(p).lower())
-            out.append(p)
-    return out
-
-
-def search_installs(roots: list[Path] | None = None, max_depth: int = 4) -> list[Path]:
-    """Find game folders (the folder above Apps/, or the exe's folder) under the given roots."""
-    found: list[Path] = []
-    for root in roots if roots is not None else default_search_roots():
-        for exe in _walk_for_exes(root, max_depth):
-            folder = exe.parent.parent if exe.parent.name.lower() == "apps" else exe.parent
-            if folder not in found:
-                found.append(folder)
-    return found
-
-
 def inspect_install(root: str | Path) -> InstallReport:
     root = Path(root)
     if not root.is_dir():

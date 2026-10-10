@@ -87,20 +87,42 @@ def cmd_doctor(cfg, args) -> int:
 
 # ----------------------------------------------------------------- install --
 def cmd_install(cfg, args) -> int:
-    from .install_info import default_search_roots, inspect_install, search_installs
+    from .install_info import inspect_install
     folder = args.folder
     if not folder:
-        roots = default_search_roots()
-        print("searching for SC3.exe / SC3U.exe under: " + ", ".join(str(r) for r in roots))
-        found = search_installs(roots)
-        if not found:
-            print("not found automatically. Run again with the game folder, e.g.\n"
-                  '    python -m mayor install "C:\\Program Files\\Maxis\\SimCity 3000"')
+        from .locate import KIND_ORDER, add_shortcut_targets, default_roots, install_folder_for, scan
+        roots = default_roots()
+        print("searching this PC for SimCity 3000 (read-only, up to ~1-2 minutes)...")
+        for r, depth in roots:
+            print(f"  {r}  (depth {depth})")
+        res = scan(roots)
+        add_shortcut_targets(res)
+        print(f"scanned {res.dirs_scanned:,} folders in {res.seconds}s" + ("" if res.complete else " (stopped early)"))
+        labels = {"game_exe": "GAME EXE", "shortcut": "shortcut", "readme": "readme", "exe_like": "program",
+                  "archive": "archive", "folder": "folder"}
+        if res.clues:
+            print("\nclues:")
+            for kind in KIND_ORDER:
+                items = res.by_kind(kind)
+                for c in items[:15]:
+                    print(f"  [{labels[kind]}] {c.path}" + (f"  {c.detail}" if c.detail else ""))
+                if len(items) > 15:
+                    print(f"  [{labels[kind]}] ... {len(items) - 15} more")
+        out_dir = Path(cfg["runs_dir"])
+        out_dir.mkdir(parents=True, exist_ok=True)
+        clue_file = out_dir / f"locate-{_stamp()}.json"
+        clue_file.write_text(json.dumps({"roots": res.roots, "complete": res.complete,
+                                         "clues": [c.to_dict() for c in res.clues]}, indent=2, ensure_ascii=False),
+                             encoding="utf-8")
+        exes = [c for c in res.by_kind("game_exe") if "missing" not in c.detail]
+        if not exes:
+            print("\nno SC3.exe / SC3U.exe found. The clues above (saved to " + str(clue_file) + ") show where")
+            print("game files might be. If you know the folder, run:")
+            print('    python run.py install "C:\\path\\to\\game folder"')
             return 1
-        for f in found:
-            print(f"found: {f}")
-        folder = found[0]
-        print()
+        exes.sort(key=lambda c: (not c.path.lower().endswith("sc3u.exe"), c.path.lower()))
+        folder = install_folder_for(exes[0].path)
+        print(f"\ninspecting: {folder}\n")
     try:
         rep = inspect_install(folder)
     except FileNotFoundError as e:
