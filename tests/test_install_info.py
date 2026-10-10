@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from mayor.install_info import PEError, inspect_install, parse_pe
+from mayor.install_info import PEError, inspect_install, parse_pe, search_installs
 
 HAVE_TOOLS = bool(shutil.which("clang") and shutil.which("lld-link"))
 
@@ -99,6 +99,19 @@ class NoToolTests(unittest.TestCase):
             rep = inspect_install(d)
             self.assertIsNone(rep.exe)
             self.assertIn("no SC3.exe", rep.findings[0])
+
+    def test_search_installs(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "Maxis" / "SimCity 3000 Unlimited" / "Apps").mkdir(parents=True)
+            (root / "Maxis" / "SimCity 3000 Unlimited" / "Apps" / "SC3U.exe").write_bytes(b"")
+            (root / "Old" / "SC3").mkdir(parents=True)
+            (root / "Old" / "SC3" / "sc3.EXE").write_bytes(b"")
+            (root / "a" / "b" / "c" / "d" / "e").mkdir(parents=True)
+            (root / "a" / "b" / "c" / "d" / "e" / "SC3.exe").write_bytes(b"")  # deeper than max_depth
+            found = sorted(str(p.relative_to(root)) for p in search_installs([root], max_depth=4))
+            self.assertEqual(found, [str(Path("Maxis/SimCity 3000 Unlimited")), str(Path("Old/SC3"))])
+            self.assertEqual(search_installs([root / "nope"]), [])
 
     def test_missing_folder(self):
         with self.assertRaises(FileNotFoundError):

@@ -12,6 +12,7 @@ Nothing is modified. Works on any OS (pure Python PE parsing).
 from __future__ import annotations
 
 import hashlib
+import os
 import struct
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -123,15 +124,59 @@ class InstallReport:
         return asdict(self)
 
 
-def find_game_exe(root: Path, max_depth: int = 3) -> Path | None:
-    hits = []
-    for p in root.rglob("*"):
-        if len(p.relative_to(root).parts) > max_depth:
+def _walk_for_exes(root: Path, max_depth: int) -> list[Path]:
+    """Depth-limited search that skips folders it may not read (rglob would walk everything)."""
+    hits: list[Path] = []
+    stack = [(root, 0)]
+    while stack:
+        d, depth = stack.pop()
+        try:
+            entries = list(os.scandir(d))
+        except OSError:
             continue
-        if p.is_file() and p.name.lower() in EDITION_BY_EXE:
-            hits.append(p)
-    hits.sort(key=lambda p: (p.name.lower() != "sc3u.exe", len(p.parts)))
+        for e in entries:
+            try:
+                if e.is_file() and e.name.lower() in EDITION_BY_EXE:
+                    hits.append(Path(e.path))
+                elif e.is_dir(follow_symlinks=False) and depth < max_depth:
+                    stack.append((Path(e.path), depth + 1))
+            except OSError:
+                continue
+    return hits
+
+
+def find_game_exe(root: Path, max_depth: int = 3) -> Path | None:
+    hits = _walk_for_exes(root, max_depth)
+    hits.sort(key=lambda p: (p.name.lower() != "sc3u.exe", len(p.parts), str(p)))
     return hits[0] if hits else None
+
+
+def default_search_roots() -> list[Path]:
+    """Usual install locations on Windows (plus whatever the environment says)."""
+    roots: list[str] = []
+    for var in ("ProgramFiles(x86)", "ProgramFiles", "ProgramW6432"):
+        if os.environ.get(var):
+            roots.append(os.environ[var])
+    for drive in ("C:", "D:", "E:"):
+        roots += [drive + "\\Games", drive + "\\Maxis", drive + "\\SimCity 3000", drive + "\\SimCity 3000 Unlimited"]
+    seen, out = set(), []
+    for r in roots:
+        p = Path(r)
+        if p.is_dir() and str(p).lower() not in seen:
+            seen.add(str(p).lower())
+            out.append(p)
+    return out
+
+
+def search_installs(roots: list[Path] | None = None, max_depth: int = 4) -> list[Path]:
+    """Find game folders (the folder above Apps/, or the exe's folder) under the given roots."""
+    found: list[Path] = []
+    for root in roots if roots is not None else default_search_roots():
+        for exe in _walk_for_exes(root, max_depth):
+            folder = exe.parent.parent if exe.parent.name.lower() == "apps" else exe.parent
+            if folder not in found:
+                found.append(folder)
+    return found
 
 
 def inspect_install(root: str | Path) -> InstallReport:

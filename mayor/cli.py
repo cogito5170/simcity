@@ -87,9 +87,22 @@ def cmd_doctor(cfg, args) -> int:
 
 # ----------------------------------------------------------------- install --
 def cmd_install(cfg, args) -> int:
-    from .install_info import inspect_install
+    from .install_info import default_search_roots, inspect_install, search_installs
+    folder = args.folder
+    if not folder:
+        roots = default_search_roots()
+        print("searching for SC3.exe / SC3U.exe under: " + ", ".join(str(r) for r in roots))
+        found = search_installs(roots)
+        if not found:
+            print("not found automatically. Run again with the game folder, e.g.\n"
+                  '    python -m mayor install "C:\\Program Files\\Maxis\\SimCity 3000"')
+            return 1
+        for f in found:
+            print(f"found: {f}")
+        folder = found[0]
+        print()
     try:
-        rep = inspect_install(args.folder)
+        rep = inspect_install(folder)
     except FileNotFoundError as e:
         print(e)
         return 1
@@ -279,7 +292,7 @@ def main(argv=None) -> int:
     sub.add_parser("doctor", help="check environment, find the game window, test one capture")
     sub.add_parser("windows", help="list all visible windows (Windows only)")
     i = sub.add_parser("install", help="inspect the game's install folder (edition, GZCOM plugin support)")
-    i.add_argument("folder", help='e.g. "C:\\Program Files\\Maxis\\SimCity 3000"')
+    i.add_argument("folder", nargs="?", help=r'game folder, e.g. "C:\Program Files\Maxis\SimCity 3000"; omit to search usual locations')
     sub.add_parser("calibrate", help="save a frame + coordinate grid (+ ROI crops) to set up OCR regions")
     o = sub.add_parser("observe", help="observe the city and record its state")
     o.add_argument("--source", help="window | screen | file:PATH")

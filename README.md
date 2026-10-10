@@ -11,7 +11,7 @@ AI가 도시를 **관찰 → 판단 → 행동 → 평가**하며 스스로 운�
 | 명령 | 하는 일 |
 |---|---|
 | `python -m mayor doctor` | 환경 점검: 게임 창 찾기, 캡처 1장 시험, 검은 화면 여부, OCR/API 키 확인 |
-| `python -m mayor install "<게임 폴더>"` | 설치 폴더 점검(읽기 전용): 판본(원판/Unlimited), GZCOM 플러그인 지원 흔적, 파일 빌드 정보 |
+| `check_game.bat` 더블클릭, 또는 `python -m mayor install ["<게임 폴더>"]` | 설치 폴더 점검(읽기 전용): 판본(원판/Unlimited), GZCOM 플러그인 지원 흔적, 파일 빌드 정보 |
 | `python -m mayor windows` | 열려 있는 모든 창(제목·exe·크기) 나열. 게임 창 이름이 예상과 다를 때 사용 |
 | `python -m mayor calibrate` | 현재 화면 + 좌표 격자 이미지 저장. OCR 영역(ROI)을 잡는 데 사용 |
 | `python -m mayor observe` | 주기적으로 관찰하고 `runs/run-*/log.jsonl`에 도시 상태 기록 |
@@ -34,25 +34,24 @@ AI가 도시를 **관찰 → 판단 → 행동 → 평가**하며 스스로 운�
 1. **Python 3.9 이상**이 필요합니다. 이미 설치되어 있으면 다시 설치하지 않아도 됩니다.
    설치 여부는 명령 프롬프트에서 `python --version`으로 확인합니다.
 2. **코드를 내려받습니다.** 둘 중 하나를 쓰면 됩니다.
-   - ZIP: GitHub에 로그인한 상태에서
+   - ZIP: 아래 주소
      https://github.com/cogito5170/simcity/archive/refs/heads/claude/epic-bardeen-gv5bls.zip
      을 내려받아 압축을 풉니다. 폴더 이름은 `simcity-claude-epic-bardeen-gv5bls`입니다.
    - git: `git clone -b claude/epic-bardeen-gv5bls https://github.com/cogito5170/simcity.git`
-3. 명령 프롬프트에서 **그 폴더로 이동**합니다. `mayor` 폴더와 `README.md`가 보이는 위치여야 합니다.
-   ```
-   cd C:\Users\<이름>\Downloads\simcity-claude-epic-bardeen-gv5bls
-   dir
-   ```
-   다른 폴더에서 실행하면 `No module named mayor` 오류가 납니다.
-4. 필요한 라이브러리를 설치합니다.
+3. **가장 쉬운 방법:** 압축을 푼 폴더에서 `check_game.bat`을 **더블클릭**합니다.
+   게임 설치 폴더를 자동으로 찾아 점검하고, 결과 창이 열린 채로 남습니다.
+   - 압축을 두 번 풀어 폴더 안에 같은 이름의 폴더가 또 있으면, `mayor` 폴더가 보이는 안쪽 폴더의 파일을 쓰세요.
+   - 게임 폴더를 자동으로 찾지 못하면 명령 프롬프트에서 위치를 직접 지정합니다.
+     ```
+     python C:\...\simcity-claude-epic-bardeen-gv5bls\run.py install "C:\게임\설치\폴더"
+     ```
+     `run.py`는 어느 폴더에서 실행해도 동작합니다.
+     `python -m mayor ...` 형식은 `mayor` 폴더가 있는 위치에서만 동작합니다. 다른 곳에서 실행하면 `No module named mayor` 오류가 납니다.
+4. 화면 관찰 기능을 쓰려면 라이브러리를 설치합니다. 설치 폴더 점검만 할 때는 필요 없습니다.
    ```
    python -m pip install -r requirements.txt
    ```
-5. 게임 설치 폴더를 점검합니다. 이 명령은 Pillow 없이도 동작합니다.
-   ```
-   python -m mayor install "C:\게임\설치\폴더"
-   ```
-6. SimCity 3000을 실행하고 도시를 연 상태에서 다음을 실행합니다.
+5. SimCity 3000을 실행하고 도시를 연 상태에서 다음을 실행합니다.
    ```
    python -m mayor doctor
    ```
@@ -62,7 +61,7 @@ AI가 도시를 **관찰 → 판단 → 행동 → 평가**하며 스스로 운�
    - 두 방식 모두 `BLANK`가 나오면 전체화면(DirectDraw) 출력이 캡처되지 않는 경우일 수 있습니다.
      창 모드를 시도해 보세요 (`docs/ENVIRONMENT.md` 참고).
    - `runs/doctor-*/capture_*.png`를 열어 **게임 화면이 실제로 찍혔는지** 눈으로 확인합니다.
-7. 상태 읽기 방법을 고릅니다. 둘 다 써도 됩니다.
+6. 상태 읽기 방법을 고릅니다. 둘 다 써도 됩니다.
    - **무료: 로컬 OCR.** [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki)를 설치하고 `pip install pytesseract`를 실행합니다.
      그다음 `python -m mayor calibrate`가 만든 `grid.png`를 보고 자금·인구·날짜가 표시되는 영역을
      `config.json`의 `"rois"`에 0~1 비율 좌표로 적습니다. 다시 `calibrate`를 실행해 `roi_*.png` 조각을 확인하세요.
@@ -71,7 +70,7 @@ AI가 도시를 **관찰 → 판단 → 행동 → 평가**하며 스스로 운�
      set GEMINI_API_KEY=...
      python -m mayor observe --extract llm --provider gemini --once
      ```
-8. 계속 기록하려면 다음을 실행합니다.
+7. 계속 기록하려면 다음을 실행합니다.
    ```
    python -m mayor observe --extract ocr,llm
    ```
