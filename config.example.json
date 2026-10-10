@@ -1,0 +1,23 @@
+{
+  "source": "window",
+  "window_title_pattern": "sim\\s*city\\s*3000",
+  "window_exe": null,
+  "capture_method": "rect",
+  "interval_s": 15,
+  "save_frame_min_change": 0.02,
+  "extract": [
+    "ocr"
+  ],
+  "rois": {},
+  "tesseract_cmd": null,
+  "llm": {
+    "provider": "gemini",
+    "model": null,
+    "min_interval_s": 300,
+    "min_change": 0.05,
+    "max_calls_per_run": 50,
+    "max_width": 1024,
+    "mock_response_file": null
+  },
+  "runs_dir": "runs"
+}
