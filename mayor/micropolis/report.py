@@ -263,6 +263,8 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
     else:
         reviewer_ko = f"LLM 시장 ({', '.join(models) or reviewer})"
     fallbacks = sum(1 for r in reviews if "failed" in r["source"])
+    page_title = ("규칙 시장의 도시 기록" if reviewer == "rules" else
+                  "Claude Code 시장의 도시 기록" if "claude-code" in reviewer else "LLM 시장의 도시 기록")
     first, last = months[0]["date"], months[-1]["date"]
 
     charts = "".join([
@@ -288,7 +290,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
 <div class="wrap">
   <header>
     <div class="eyebrow">Micropolis · seed {summ.get("seed")} · {first} ~ {last}</div>
-    <h1>AI 시장의 도시 운영 기록</h1>
+    <h1>{page_title}</h1>
     <p class="lede">{html.escape(reviewer_ko)}이 {summ.get("years")}년 동안 도시를 운영한 기록입니다.
       화면은 한 달에 한 장씩 그린 실제 게임 지도이고, 숫자는 모두 시뮬레이션 엔진이 보고한 정확한 값입니다.</p>
     <div class="zones"><span class="r">주거(R)</span><span class="c">상업(C)</span><span class="i">공업(I)</span>
@@ -325,7 +327,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
     원본 데이터: months.jsonl, reviews.jsonl, saves/final.cty</footer>
 </div>
 <script>{JS}</script>"""
-    head = (f"<title>AI 시장의 도시 운영 기록</title>\n"
+    head = (f"<title>{page_title}</title>\n"
             '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600'
             '&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">\n'

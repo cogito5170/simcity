@@ -125,7 +125,7 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(len(res.months), 24)
             out = make_report(res.run_dir)
             page = Path(out["index"]).read_text(encoding="utf-8")
-            self.assertIn("<title>AI 시장의 도시 운영 기록</title>", page)
+            self.assertIn("<title>규칙 시장의 도시 기록</title>", page)
             self.assertTrue((res.run_dir / "saves" / "final.cty").exists())
             if shutil.which("ffmpeg"):
                 self.assertEqual(out["video"], "video.mp4")
