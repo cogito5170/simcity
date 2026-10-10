@@ -95,11 +95,22 @@ def cmd_install(cfg, args) -> int:
         print("searching this PC for SimCity 3000 (read-only, up to ~1-2 minutes)...")
         for r, depth in roots:
             print(f"  {r}  (depth {depth})")
-        res = scan(roots)
-        add_shortcut_targets(res)
-        print(f"scanned {res.dirs_scanned:,} folders in {res.seconds}s" + ("" if res.complete else " (stopped early)"))
         labels = {"game_exe": "GAME EXE", "shortcut": "shortcut", "readme": "readme", "exe_like": "program",
                   "archive": "archive", "folder": "folder"}
+
+        def on_clue(c):
+            if c.kind != "folder":  # folders are listed at the end
+                print(f"  found [{labels[c.kind]}] {c.path}", flush=True)
+
+        def on_progress(dirs, n, root, elapsed):
+            print(f"  ... {elapsed}s, {dirs:,} folders checked, {n} clues so far (now in {root})", flush=True)
+
+        print("(progress is shown every few seconds; Ctrl+C stops early and keeps what was found)", flush=True)
+        res = scan(roots, on_clue=on_clue, on_progress=on_progress)
+        if res.by_kind("shortcut"):
+            print("reading shortcut targets...", flush=True)
+        add_shortcut_targets(res)
+        print(f"scanned {res.dirs_scanned:,} folders in {res.seconds}s" + ("" if res.complete else " (stopped early)"))
         if res.clues:
             print("\nclues:")
             for kind in KIND_ORDER:

@@ -61,62 +61,80 @@ def _is_readme_candidate(name: str, size: int) -> bool:
 
 
 def scan(roots: list[tuple[Path, int]], time_budget_s: float = 90.0, max_readme_reads: int = 4000,
-         max_clues: int = 300) -> ScanResult:
-    """Depth-limited, permission-tolerant walk over (root, max_depth) pairs."""
+         max_clues: int = 300, on_clue=None, on_progress=None, progress_every_s: float = 5.0) -> ScanResult:
+    """Depth-limited, permission-tolerant walk over (root, max_depth) pairs.
+
+    on_clue(clue) is called as each clue is found; on_progress(dirs, n_clues, root, elapsed)
+    every `progress_every_s`. Ctrl+C stops the walk and returns what was found so far.
+    """
     t0 = time.monotonic()
     clues: list[Clue] = []
     seen_dirs: set[str] = set()
     readme_reads = 0
     dirs = 0
     complete = True
-    for root, max_depth in roots:
-        stack = [(root, 0)]
-        while stack:
-            if time.monotonic() - t0 > time_budget_s or len(clues) >= max_clues:
-                complete = False
-                stack.clear()
-                break
-            d, depth = stack.pop()
-            key = os.path.normcase(os.path.abspath(d))
-            if key in seen_dirs:
-                continue
-            seen_dirs.add(key)
-            try:
-                entries = list(os.scandir(d))
-            except OSError:
-                continue
-            dirs += 1
-            for e in entries:
+    next_progress = t0 + progress_every_s
+
+    def found(c: Clue) -> None:
+        clues.append(c)
+        if on_clue:
+            on_clue(c)
+
+    try:
+        for root, max_depth in roots:
+            stack = [(root, 0)]
+            while stack:
+                now = time.monotonic()
+                if on_progress and now >= next_progress:
+                    on_progress(dirs, len(clues), root, round(now - t0))
+                    next_progress = now + progress_every_s
+                if time.monotonic() - t0 > time_budget_s or len(clues) >= max_clues:
+                    complete = False
+                    stack.clear()
+                    break
+                d, depth = stack.pop()
+                key = os.path.normcase(os.path.abspath(d))
+                if key in seen_dirs:
+                    continue
+                seen_dirs.add(key)
                 try:
-                    name = e.name
-                    if e.is_dir(follow_symlinks=False):
-                        if NAME_HINT.search(name):
-                            clues.append(Clue("folder", e.path))
-                        if depth < max_depth and name.lower() not in SKIP_DIRS:
-                            stack.append((Path(e.path), depth + 1))
-                        continue
-                    if not e.is_file():
-                        continue
-                    low = name.lower()
-                    suffix = os.path.splitext(low)[1]
-                    if low in EDITION_BY_EXE:
-                        clues.append(Clue("game_exe", e.path, EDITION_BY_EXE[low]))
-                    elif suffix == ".lnk" and NAME_HINT.search(name):
-                        clues.append(Clue("shortcut", e.path))
-                    elif suffix == ".exe" and NAME_HINT.search(name):
-                        clues.append(Clue("exe_like", e.path))
-                    elif suffix in ARCHIVE_EXT and NAME_HINT.search(name):
-                        clues.append(Clue("archive", e.path, f"{e.stat().st_size:,} bytes"))
-                    elif (readme_reads < max_readme_reads and _is_readme_candidate(name, e.stat().st_size)
-                          and not getattr(e.stat(), "st_file_attributes", 0) & _CLOUD_ONLY):
-                        readme_reads += 1
-                        with open(e.path, "rb") as f:
-                            data = f.read()
-                        hit = next((m for m in README_MARKERS if m in data), None)
-                        if hit is not None:
-                            clues.append(Clue("readme", e.path, "mentions the game"))
+                    entries = list(os.scandir(d))
                 except OSError:
                     continue
+                dirs += 1
+                for e in entries:
+                    try:
+                        name = e.name
+                        if e.is_dir(follow_symlinks=False):
+                            if NAME_HINT.search(name):
+                                found(Clue("folder", e.path))
+                            if depth < max_depth and name.lower() not in SKIP_DIRS:
+                                stack.append((Path(e.path), depth + 1))
+                            continue
+                        if not e.is_file():
+                            continue
+                        low = name.lower()
+                        suffix = os.path.splitext(low)[1]
+                        if low in EDITION_BY_EXE:
+                            found(Clue("game_exe", e.path, EDITION_BY_EXE[low]))
+                        elif suffix == ".lnk" and NAME_HINT.search(name):
+                            found(Clue("shortcut", e.path))
+                        elif suffix == ".exe" and NAME_HINT.search(name):
+                            found(Clue("exe_like", e.path))
+                        elif suffix in ARCHIVE_EXT and NAME_HINT.search(name):
+                            found(Clue("archive", e.path, f"{e.stat().st_size:,} bytes"))
+                        elif (readme_reads < max_readme_reads and _is_readme_candidate(name, e.stat().st_size)
+                              and not getattr(e.stat(), "st_file_attributes", 0) & _CLOUD_ONLY):
+                            readme_reads += 1
+                            with open(e.path, "rb") as f:
+                                data = f.read()
+                            hit = next((m for m in README_MARKERS if m in data), None)
+                            if hit is not None:
+                                found(Clue("readme", e.path, "mentions the game"))
+                    except OSError:
+                        continue
+    except KeyboardInterrupt:
+        complete = False
     clues.sort(key=lambda c: (KIND_ORDER.index(c.kind), c.path.lower()))
     return ScanResult(clues, [str(r) for r, _ in roots], dirs, round(time.monotonic() - t0, 1), complete)
 

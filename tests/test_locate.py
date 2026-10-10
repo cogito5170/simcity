@@ -42,6 +42,13 @@ class LocateTests(unittest.TestCase):
         self.assertTrue(res.complete)
         self.assertEqual(res.clues[0].kind, "game_exe")  # sorted by importance
 
+    def test_callbacks(self):
+        seen, progress = [], []
+        res = scan([(self.root, 3)], on_clue=seen.append, progress_every_s=0,
+                   on_progress=lambda *a: progress.append(a))
+        self.assertEqual(len(seen), len(res.clues))
+        self.assertTrue(progress)
+
     def test_time_budget(self):
         res = scan([(self.root, 3)], time_budget_s=-1)
         self.assertFalse(res.complete)
