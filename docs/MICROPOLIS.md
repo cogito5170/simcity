@@ -22,10 +22,18 @@ Micropolis(SimCity Classic의 실제 엔진)를 화면 없이 돌리면서 AI �
 bash tools/setup_micropolis.sh          # 엔진을 받아 빌드 (약 10초, GPL-3.0이라 저장소에 포함하지 않음)
 python -m mayor micropolis --years 20 --seed 2
 # -> runs/micropolis-…/index.html, video.mp4
-python -m mayor micropolis --reviewer llm --provider gemini     # LLM 시장 (API 키 필요)
+python -m mayor micropolis --reviewer llm --provider claude-code  # Claude Code 시장 (API 키 불필요)
+python -m mayor micropolis --reviewer llm --provider gemini       # 다른 LLM (API 키 필요)
 python -m mayor micropolis --report-only runs/micropolis-…        # 보고서만 다시 만들기
 ```
 Windows에서 WSL 없이 실행하는 방법은 아직 확인하지 않았습니다.
+
+### Claude Code를 시장으로 쓰기
+`--provider claude-code`는 설치된 Claude Code CLI를 헤드리스로 호출합니다 (`claude -p --output-format json --tools ""`).
+- API 키 없이 CLI의 로그인(구독)을 그대로 씁니다. 같은 PC(WSL)에서 `claude`에 한 번 로그인해 두면 됩니다.
+- 모든 도구를 끄고 빈 임시 폴더에서 실행하므로, 시장 판단 외에 파일을 읽거나 바꾸지 않습니다.
+- 재검토 1회에 15~20초 정도 걸립니다. 20년이면 재검토 20~30회입니다.
+- `--model`로 모델을 고를 수 있습니다. 생략하면 CLI 기본 모델을 씁니다.
 
 ## 구조
 ```
@@ -56,7 +64,11 @@ Windows에서 WSL 없이 실행하는 방법은 아직 확인하지 않았습니
 | 규칙 기반 재검토 | 6,600 | 6,210 | 예측 적중률 37%. **고정 전략보다 나쁨** |
 
 - 단순한 규칙으로는 고정 전략도 이기지 못했습니다. 이 결과가 LLM 시장이 넘어야 할 기준선입니다.
-- 공업 분리(`land_use: separated`)는 시드 6개에서 더 안정적이었지만 정점은 낮았습니다. 어느 쪽이 낫다고 결론 내리지 않았습니다.
+- 공업 분리(`land_use: separated`, 공업을 주거에서 약 50칸 떨어진 아래쪽 구역에 배치):
+  시드 8개, 세율 7% 기준으로 정점은 더 높았지만(평균 21,000 vs 18,300) 최종 인구는 낮았고(8,640 vs 11,395),
+  평균 오염은 오히려 높았습니다(57 vs 45). 통근 거리가 늘어 교통 오염이 커졌을 가능성이 있지만 확인하지 않았습니다.
+  - 처음 측정은 **전력 버그**가 있는 상태였습니다. 공업 구역이 빈 칸 너머에 있어 전기가 닿지 않았습니다.
+    Claude Code 시장이 첫 판단부터 공업 분리를 고른 실행에서 정전 경고가 계속 나와 발견했고, 고친 뒤 다시 측정했습니다.
 - 시드에 따라 결과 차이가 큽니다. 성장 → 쇠퇴 → 회복 주기가 자주 나타나고, 원인은 아직 확정하지 못했습니다
   (자금 정체, 범죄 증가, 지가 하락이 함께 나타남).
 - `showcase/`의 예시는 시드 8개 중 하나(seed 2, 규칙 기반 시장)입니다. 성장과 쇠퇴, 회복이 모두 보여서 골랐습니다.

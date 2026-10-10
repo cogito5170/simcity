@@ -95,5 +95,48 @@ class ProviderRequestTests(unittest.TestCase):
             make_llm("nope")
 
 
+class ClaudeCodeProviderTests(unittest.TestCase):
+    """`claude -p` provider against a fake CLI (no network, no sign-in)."""
+
+    def _fake_cli(self, d, payload, code=0):
+        import os
+        import stat
+        path = os.path.join(d, "claude")
+        with open(path, "w") as f:
+            f.write("#!/bin/sh\ncat > " + os.path.join(d, "stdin.txt") + "\necho \"$@\" > " + os.path.join(d, "args.txt")
+                    + "\ncat <<'EOF'\n" + payload + "\nEOF\nexit " + str(code) + "\n")
+        os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
+        return path
+
+    def test_success_and_request_shape(self):
+        import tempfile
+        from mayor.llm.claude_code import ClaudeCodeLLM
+        with tempfile.TemporaryDirectory() as d:
+            cli = self._fake_cli(d, json.dumps({"type": "result", "subtype": "success", "is_error": False,
+                                                "result": "{\"tax_rate\": 8}", "usage": {"input_tokens": 3,
+                                                "cache_read_input_tokens": 7, "output_tokens": 5},
+                                                "modelUsage": {"claude-x": {}}}))
+            res = ClaudeCodeLLM(binary=cli).ask("hello mayor")
+            self.assertEqual((res.text, res.model, res.input_tokens, res.output_tokens), ('{"tax_rate": 8}', "claude-x", 10, 5))
+            args = open(f"{d}/args.txt").read()
+            self.assertIn("-p --output-format json --tools", args)   # headless, tools disabled
+            self.assertEqual(open(f"{d}/stdin.txt").read(), "hello mayor")
+
+    def test_errors(self):
+        import tempfile
+        from mayor.llm.claude_code import ClaudeCodeLLM
+        with tempfile.TemporaryDirectory() as d:
+            cli = self._fake_cli(d, json.dumps({"subtype": "error_max_turns", "is_error": True, "result": "nope"}))
+            with self.assertRaises(LLMError):
+                ClaudeCodeLLM(binary=cli).ask("x")
+            cli = self._fake_cli(d, "not json", code=1)
+            with self.assertRaises(LLMError):
+                ClaudeCodeLLM(binary=cli).ask("x")
+        with self.assertRaises(LLMError):
+            ClaudeCodeLLM(binary="/nonexistent/claude").ask("x")
+        with self.assertRaises(LLMError):
+            ClaudeCodeLLM(binary="/bin/true").ask("x", png=b"img")
+
+
 if __name__ == "__main__":
     unittest.main()

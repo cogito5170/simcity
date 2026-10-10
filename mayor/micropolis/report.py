@@ -131,7 +131,9 @@ def _review_cards(run: _Run) -> str:
                    f'</thead><tbody>{ev_rows}</tbody></table></div></details>') if ev_rows else ""
         exp = ", ".join(f"{METRIC_KO.get(k, k)} {DIR_KO.get(v, v)}" for k, v in rv.get("expected", {}).items())
         src = rv["source"]
-        src_label = "규칙 기반" if src == "rules" else ("LLM 실패 → 규칙" if "failed" in src else src.replace("llm:", "LLM "))
+        model = (rv.get("usage") or {}).get("model")
+        src_label = ("규칙 기반" if src == "rules" else "LLM 실패 → 규칙" if "failed" in src
+                     else f"Claude Code · {model}" if "claude-code" in src else f"LLM · {model or src}")
         cards.append(f'''
 <article class="review" id="r-{html.escape(rv["date"])}">
   <header><time>{rv["date"][:4]}년 {int(rv["date"][5:]):d}월</time><span class="src">{html.escape(src_label)}</span>
@@ -253,7 +255,14 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
             skipped += a["status"] == "skipped"
             failed += a["status"] == "failed"
     reviewer = summ.get("reviewer", "rules")
-    reviewer_ko = "규칙 기반 시장 (LLM 없이, 비용 0)" if reviewer == "rules" else f"LLM 시장 ({reviewer})"
+    models = sorted({(r.get("usage") or {}).get("model") for r in reviews} - {None})
+    if reviewer == "rules":
+        reviewer_ko = "규칙 기반 시장 (LLM 없이, 비용 0)"
+    elif "claude-code" in reviewer:
+        reviewer_ko = f"Claude Code 시장 ({', '.join(models) or 'claude -p'})"
+    else:
+        reviewer_ko = f"LLM 시장 ({', '.join(models) or reviewer})"
+    fallbacks = sum(1 for r in reviews if "failed" in r["source"])
     first, last = months[0]["date"], months[-1]["date"]
 
     charts = "".join([
@@ -292,6 +301,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
     <div class="kpi"><b>${months[-1]["stats"]["funds"]:,.0f}</b><span>최종 자금</span></div>
     <div class="kpi"><b>{len(reviews)}</b><span>전략 재검토 횟수</span></div>
     <div class="kpi"><b>{hit}</b><span>예측 적중률 (재검토 평균)</span></div>
+    {f'<div class="kpi"><b>{fallbacks}</b><span>LLM 실패로 규칙 대체</span></div>' if fallbacks else ""}
   </section>
   <section><h2>지표 변화</h2><div class="charts">{charts}</div></section>
   <section><h2>매년 1월의 도시</h2><div class="years">{years}</div></section>
@@ -308,7 +318,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
       <li>세금은 매년 1월에 한 번 정산됩니다.</li></ul></section>
     <section><h3>아직 모르는 것</h3><ul>
       <li>인구가 정점을 찍고 줄어드는 주기의 정확한 원인 (범죄, 지가 하락, 자금 부족 중 어느 것이 큰지)</li>
-      <li>공업 분리 배치가 장기적으로 나은지: 시험 6회에서 더 안정적이었지만 정점은 낮았습니다.</li>
+      <li>공업 분리 배치가 나은지: 고정 전략 시험 8회에서 정점은 높았지만 최종 인구는 낮았고 오염은 오히려 높았습니다. 이유는 아직 모릅니다.</li>
       <li>도로 배치 자체는 고정된 격자라 시장이 바꿀 수 없습니다.</li></ul></section>
   </section>
   <footer>Micropolis(SimCity Classic 엔진, GPL-3.0)를 화면 없이 실행해 만든 기록입니다.

@@ -374,7 +374,7 @@ def main(argv=None) -> int:
     mp.add_argument("--years", type=int, default=20)
     mp.add_argument("--seed", type=int, default=1)
     mp.add_argument("--reviewer", choices=["rules", "llm"], default="rules")
-    mp.add_argument("--provider", help="anthropic | gemini | openai | mock (with --reviewer llm)")
+    mp.add_argument("--provider", help="claude-code | anthropic | gemini | openai | mock (with --reviewer llm)")
     mp.add_argument("--model")
     mp.add_argument("--review-every", type=int, default=12, help="months between strategy reviews")
     mp.add_argument("--engine-dir", help="gymtropolis checkout (default: third_party/gymtropolis)")

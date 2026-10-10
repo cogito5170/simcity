@@ -23,6 +23,7 @@ PERIOD = 7               # road, 3 zone rows... road
 CONN_EVERY = 6           # a connector road column after every 6 slots
 BLOCK_COLS = 12          # columns filled per pair of rows before moving down
 MAX_PAIRS = 11
+IND_PAIR_START = 7       # separated land use: row pairs 7.. are the industrial district
 ROW_CENTERS = (2, 5)     # zone-row centre offsets inside a pair
 PLANT_SLOTS = [(OX - 3 - 4 * k, OY - 5 - 4 * m) for m in range(2) for k in range(3)]
 # Special buildings stacked under the first plant, each touching the one above (power flows through).
@@ -99,14 +100,16 @@ class Planner:
         return sum(1 for k in self.used_slots.values() if k in ZONE_KINDS)
 
     def next_slot(self, kind: str | None = None):
-        """Next free slot. With districts on, industry goes to its own block (columns 12+),
-        everything else to the first block, so housing sits away from factory pollution."""
+        """Next free slot. With districts on, industry fills the bottom row pairs (from IND_PAIR_START)
+        and everything else the top ones, so housing sits ~50 tiles from factory pollution.
+        Each district still starts at column 0, next to the power spine: zones pass power only
+        to touching zones, so a district must grow outward from the spine without gaps."""
         def free(s):
             return s not in self.used_slots and s not in self.blocked
         if self.districts and kind is not None:
             want_ind = kind == "industrial"
             for s in slot_order():
-                if free(s) and (s[1] >= BLOCK_COLS) == want_ind:
+                if free(s) and (s[0] >= IND_PAIR_START) == want_ind:
                     return s
         for s in slot_order():
             if free(s):

@@ -118,9 +118,11 @@ class RuleReviewer:
 # -------------------------------------------------------------------- LLM --
 PROMPT = """You are the mayor of a city in Micropolis (the open-source SimCity Classic engine).
 Once per review you set the STRATEGY for the coming period. A plain-code executor then works every month:
-it builds a power plant first if zones are unpowered, adds police/fire stations by your ratios, then zones
-the type with the best (your zone_mix weight x current engine demand), up to max_builds_per_month, never
-spending below reserve_funds. It cannot build roads beyond the fixed grid, parks, rail or airports.
+it builds a power plant first (none yet, or zones unpowered 3 months in a row), buys a missing stadium/seaport/
+airport when the engine caps demand (if build_specials), adds police/fire stations by your ratios, then zones:
+among types with positive engine demand, the one furthest below its zone_mix target share. At most
+max_builds_per_month builds, never spending below reserve_funds. It cannot add roads beyond the fixed grid,
+parks or rail.
 
 Facts verified in this engine (by our own tests, not assumptions):
 - Roads do not carry power; zones pass power to touching zones. One coal plant powered ~48 zones in a test;
@@ -132,8 +134,9 @@ Facts verified in this engine (by our own tests, not assumptions):
 - Engine rule (source code): residential demand is held at 0 when res_pop > 500 and there is no stadium;
   industrial when ind_pop > 70 and no seaport; commercial when com_pop > 100 and no airport.
   With build_specials=true the executor buys the missing one when this happens.
-- land_use "separated" puts new industry in its own district away from housing. Over 6 test seeds it was
-  more stable but peaked lower than "mixed"; neither was clearly better.
+- land_use "separated" puts new industry in its own district ~50 tiles from housing. Fixed-strategy tests,
+  8 seeds, 20 years, tax 7%: separated peaked higher (mean 21.0k vs 18.3k) but ended lower (mean 8.6k vs
+  11.4k) with higher average pollution (57 vs 45). Why pollution rose is not established (longer commutes?).
 
 MEASURED NOW (exact engine values, date {date}):
 {stats}
@@ -157,6 +160,7 @@ Return ONE JSON object, no prose:
  "reasoning": ["short points in Korean, citing the measured numbers you rely on"],
  "alternatives": [{{"option": "Korean", "why_not": "Korean"}}],
  "expected": {{"population": "up|down|flat", "funds": "...", "crime_avg": "...", "pollution_avg": "...", "traffic_avg": "..."}},
+   (give all five expectations; each is scored against the engine at the next review; under 3% change = flat)
  "uncertainties": ["Korean: what you do not know and how it could be checked"]}}
 """
 

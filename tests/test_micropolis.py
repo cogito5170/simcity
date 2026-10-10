@@ -101,6 +101,19 @@ class EngineTests(unittest.TestCase):
         r = p.place("commercial")
         self.assertEqual(r.status, "skipped")
 
+    def test_separated_industry_is_powered(self):
+        from mayor.micropolis.planner import IND_PAIR_START, Planner
+        c = City(seed=1)
+        c.e.set_funds(100000)
+        p = Planner(c, districts=True)
+        p.build_power("coal")
+        for k in ["industrial", "residential"] * 3:
+            self.assertTrue(p.place(k).ok)
+        for _ in range(4):
+            c.advance_month()
+        self.assertEqual(c.stats()["unpowered_zones"], 0)   # regression: districts must touch the spine
+        self.assertTrue(all((s[0] >= IND_PAIR_START) == (k == "industrial") for s, k in p.used_slots.items()))
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 

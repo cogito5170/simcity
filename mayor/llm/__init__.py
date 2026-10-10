@@ -18,6 +18,7 @@ DEFAULT_MODELS = {
     "gemini": "gemini-2.5-flash-lite",
     "openai": "gpt-4.1-mini",
     "mock": "mock",
+    "claude-code": None,   # the CLI's own default model; pass --model to choose
 }
 
 
@@ -34,10 +35,13 @@ def make_llm(provider: str, model: str | None = None, **kw) -> VisionLLM:
     if provider == "openai":
         from .openai import OpenAILLM
         return OpenAILLM(model, api_key=kw.get("api_key") or os.environ.get("OPENAI_API_KEY"))
+    if provider in ("claude-code", "claude_code", "claudecode"):
+        from .claude_code import ClaudeCodeLLM
+        return ClaudeCodeLLM(model)
     if provider == "mock":
         from .mock import MockLLM
         return MockLLM(kw.get("response_file"))
-    raise ValueError(f"unknown LLM provider {provider!r} (anthropic | gemini | openai | mock)")
+    raise ValueError(f"unknown LLM provider {provider!r} (anthropic | gemini | openai | claude-code | mock)")
 
 
 __all__ = ["DEFAULT_MODELS", "LLMError", "LLMResult", "VisionLLM", "make_llm"]
