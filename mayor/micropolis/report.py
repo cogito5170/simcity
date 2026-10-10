@@ -263,6 +263,14 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
     else:
         reviewer_ko = f"LLM 시장 ({', '.join(models) or reviewer})"
     fallbacks = sum(1 for r in reviews if "failed" in r["source"])
+    calls = summ.get("llm_calls") or 0
+    tok = summ.get("tokens") or {}
+    usage_kpis = "" if not calls else (
+        f'<div class="kpi"><b>{calls}</b><span>LLM 호출 (평균 {summ.get("llm_seconds", 0) / calls:.0f}초)</span></div>'
+        f'<div class="kpi"><b>{(tok.get("input", 0) + tok.get("output", 0)) / 1000:,.0f}k</b>'
+        f'<span>토큰 (입력 {tok.get("input", 0):,} / 출력 {tok.get("output", 0):,})</span></div>'
+        + (f'<div class="kpi"><b>${summ["llm_cost_usd"]:.2f}</b><span>API 정가 환산 (구독은 토큰 단위 과금 없음)</span></div>'
+           if summ.get("llm_cost_usd") else ""))
     page_title = ("규칙 시장의 도시 기록" if reviewer == "rules" else
                   "Claude Code 시장의 도시 기록" if "claude-code" in reviewer else "LLM 시장의 도시 기록")
     first, last = months[0]["date"], months[-1]["date"]
@@ -304,6 +312,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
     <div class="kpi"><b>{len(reviews)}</b><span>전략 재검토 횟수</span></div>
     <div class="kpi"><b>{hit}</b><span>예측 적중률 (재검토 평균)</span></div>
     {f'<div class="kpi"><b>{fallbacks}</b><span>LLM 실패로 규칙 대체</span></div>' if fallbacks else ""}
+    {usage_kpis}
   </section>
   <section><h2>지표 변화</h2><div class="charts">{charts}</div></section>
   <section><h2>매년 1월의 도시</h2><div class="years">{years}</div></section>

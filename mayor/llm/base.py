@@ -20,10 +20,12 @@ class LLMResult:
     output_tokens: int | None = None
     latency_s: float = 0.0
     raw: dict = field(default_factory=dict, repr=False)
+    cost_usd: float | None = None   # only when the provider reports it (claude -p: list-price estimate)
 
     def usage(self) -> dict:
         return {"model": self.model, "input_tokens": self.input_tokens,
-                "output_tokens": self.output_tokens, "latency_s": round(self.latency_s, 2)}
+                "output_tokens": self.output_tokens, "latency_s": round(self.latency_s, 2),
+                "cost_usd": None if self.cost_usd is None else round(self.cost_usd, 6)}
 
 
 class VisionLLM:

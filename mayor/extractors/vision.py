@@ -109,6 +109,8 @@ class VisionExtractor:
         source = f"llm:{self.llm.name}/{self.llm.model}"
         try:
             self.last_result = self.llm.ask(self.prompt, png_bytes(img, self.max_width))
+            from ..llm.ledger import record
+            record("screen_read", self.last_result.usage(), self.llm.name)
         except LLMError as e:
             self.last_result = None
             st = CityState()

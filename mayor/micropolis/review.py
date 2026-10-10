@@ -127,8 +127,9 @@ parks or rail.
 Facts verified in this engine (by our own tests, not assumptions):
 - Roads do not carry power; zones pass power to touching zones. One coal plant powered ~48 zones in a test;
   unpowered zones never develop.
-- In a small test city after 5 years, tax 0% -> pop 2560, 7% -> 2280, 15% -> 820, 20% -> 320.
-  Crime rose with population when there were no police stations.
+- In a small test city after 5 years WITH AMPLE FUNDS (nothing else to pay for), tax 0% -> pop 2560,
+  7% -> 2280, 15% -> 820, 20% -> 320. This says nothing about cities whose growth is limited by money;
+  see the lessons/benchmarks below when present. Crime rose with population when there were no police.
 - Costs: zone 100, police/fire 500, coal plant 3000, nuclear 5000, stadium 5000, seaport 3000, airport 10000.
   Taxes are collected yearly; nothing is built while funds are below reserve_funds.
 - Engine rule (source code): residential demand is held at 0 when res_pop > 500 and there is no stadium;
@@ -150,7 +151,7 @@ RECENT FAILED ACTIONS: {failures}
 
 YOUR PAST REVIEWS AND HOW THEIR PREDICTIONS TURNED OUT:
 {past}
-
+{lessons}
 Decide the strategy for the next period. Separate what is measured from what you assume.
 Return ONE JSON object, no prose:
 {{"strategy": {{"tax_rate": int {tax}, "zone_mix": {{"residential": w, "commercial": w, "industrial": w}},
@@ -199,8 +200,9 @@ def _fmt_past(reviews: list[Review], now_stats: dict, n: int = 3) -> str:
 
 
 class LLMReviewer:
-    def __init__(self, llm, fallback: RuleReviewer | None = None):
+    def __init__(self, llm, fallback: RuleReviewer | None = None, lessons_text: str | None = None):
         self.llm = llm
+        self.lessons_text = lessons_text
         self.fallback = fallback or RuleReviewer()
         self.name = f"llm:{llm.name}/{llm.model}"
 
@@ -210,14 +212,17 @@ class LLMReviewer:
             date=ctx.date, stats=_fmt_stats(ctx.stats), trends=_fmt_trends(ctx.history),
             planner=json.dumps(ctx.planner_summary), strategy=json.dumps(ctx.strategy.to_dict()),
             failures="; ".join(ctx.recent_failures[-5:]) or "none", past=_fmt_past(ctx.past_reviews, ctx.stats),
+            lessons=("\nLESSONS FROM EARLIER RUNS:\n" + self.lessons_text + "\n") if self.lessons_text else "",
             tax=r["tax_rate"], reserve=r["reserve_funds"], police=r["zones_per_police"],
             fire=r["zones_per_fire"], builds=r["max_builds_per_month"])
 
     def review(self, ctx: ReviewContext) -> Review:
         from ..extractors.vision import extract_json
         from ..llm import LLMError
+        from ..llm.ledger import record
         try:
             res = self.llm.ask(self.build_prompt(ctx), None, max_tokens=1500)
+            record("strategy_review", res.usage(), self.llm.name, getattr(self, "run_name", None))
             data = extract_json(res.text)
             if not isinstance(data, dict) or not isinstance(data.get("strategy"), dict):
                 raise ValueError("no 'strategy' object in reply")

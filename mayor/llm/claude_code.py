@@ -50,5 +50,6 @@ class ClaudeCodeLLM(VisionLLM):
         models = list((data.get("modelUsage") or {}).keys())
         res = LLMResult(data.get("result") or "", models[0] if models else self.model,
                         (u.get("input_tokens") or 0) + (u.get("cache_read_input_tokens") or 0)
-                        + (u.get("cache_creation_input_tokens") or 0), u.get("output_tokens"), time.time() - t0, data)
+                        + (u.get("cache_creation_input_tokens") or 0), u.get("output_tokens"), time.time() - t0, data,
+                        cost_usd=data.get("total_cost_usd"))
         return res

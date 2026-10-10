@@ -48,6 +48,8 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
         n += 1
         run_dir = base.with_name(f"{base.name}-{n}")
     run_dir.mkdir(parents=True)
+    if hasattr(reviewer, "llm"):
+        reviewer.run_name = run_dir.name   # tags this run's calls in the usage ledger
     months, reviews, tiles, failures = [], [], [], []
     months_since_power = 99
     unpowered_streak = 0
@@ -95,7 +97,9 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
              "reviewer": getattr(reviewer, "name", "rules"), "seed": seed, "years": years,
              "llm_calls": sum(1 for r in reviews if r.usage),
              "tokens": {"input": sum((r.usage or {}).get("input_tokens") or 0 for r in reviews),
-                        "output": sum((r.usage or {}).get("output_tokens") or 0 for r in reviews)}}
+                        "output": sum((r.usage or {}).get("output_tokens") or 0 for r in reviews)},
+             "llm_cost_usd": round(sum((r.usage or {}).get("cost_usd") or 0 for r in reviews), 4),
+             "llm_seconds": round(sum((r.usage or {}).get("latency_s") or 0 for r in reviews), 1)}
     (run_dir / "summary.json").write_text(json.dumps(final, indent=2, ensure_ascii=False), encoding="utf-8")
     np.savez_compressed(run_dir / "tiles.npz", tiles=np.stack(tiles))
     return RunResult(run_dir, months, reviews, tiles)

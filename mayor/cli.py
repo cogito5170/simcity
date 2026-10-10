@@ -312,8 +312,12 @@ def cmd_micropolis(cfg, args) -> int:
     if args.reviewer == "llm":
         from .llm import make_llm
         lc = cfg["llm"]
+        lessons_text = None
+        if args.lessons:
+            from .micropolis.lessons import format_lessons
+            lessons_text = format_lessons(json.loads(Path(args.lessons).read_text(encoding="utf-8")))
         reviewer = LLMReviewer(make_llm(args.provider or lc["provider"], args.model or lc["model"],
-                                        response_file=lc.get("mock_response_file")))
+                                        response_file=lc.get("mock_response_file")), lessons_text=lessons_text)
     print(f"running {args.years} game years, seed {args.seed}, reviewer {getattr(reviewer, 'name', 'rules')} ...")
 
     def show(m):
@@ -330,7 +334,51 @@ def cmd_micropolis(cfg, args) -> int:
     print("rendering video and report ...", flush=True)
     out = make_report(res.run_dir)
     print(f"\nopen in a browser: {out['index']}\nvideo: {res.run_dir / (out['video'] or 'poster.png')}")
+    summ = json.loads((res.run_dir / "summary.json").read_text(encoding="utf-8"))
+    if summ.get("llm_calls"):
+        print(f"LLM: {summ['llm_calls']} calls, tokens in {summ['tokens']['input']:,} / out {summ['tokens']['output']:,}"
+              f", list-price estimate ${summ['llm_cost_usd']:.2f}, {summ['llm_seconds']:.0f}s waiting")
     return 0
+
+
+# ------------------------------------------------------------------ lessons --
+def cmd_lessons(cfg, args) -> int:
+    from .llm import make_llm
+    from .micropolis.lessons import build_lessons, format_lessons
+    llm = make_llm(args.provider, args.model) if args.provider else None
+    print(f"benchmarks on seeds {args.bench_seeds}; reflecting on {len(args.runs)} runs"
+          + (f" with {args.provider}" if llm else " (no reflection: give --provider)"), flush=True)
+    les = build_lessons(args.runs, args.bench_seeds, llm=llm, years=args.years, engine_dir=args.engine_dir)
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.out).write_text(json.dumps(les, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(format_lessons(les))
+    print(f"\nwritten: {args.out}")
+    return 0
+
+
+# -------------------------------------------------------------------- usage --
+def cmd_usage(cfg, args) -> int:
+    from .llm.ledger import ledger_path, read, summarize, totals
+    entries = read()
+    if args.run:
+        entries = [e for e in entries if e.get("run") and args.run in e["run"]]
+    print(f"ledger: {ledger_path()}  ({len(entries)} calls)")
+    if not entries:
+        return 0
+    def line(name, t):
+        cost = f"${t['cost_usd']:.2f}" + ("" if t["cost_known_calls"] == t["calls"] else f" ({t['cost_known_calls']} priced)")
+        return (f"  {name:<34} {t['calls']:>5} calls  in {t['input_tokens']:>11,}  out {t['output_tokens']:>9,}  "
+                f"{cost:>10}  {t['latency_s']:>7.0f}s")
+    for by in ("purpose", "model", "provider"):
+        print(f"by {by}:")
+        for k, t in summarize(entries, by).items():
+            print(line(k, t))
+    print(line("TOTAL", totals(entries)))
+    print("cost = what the provider reports; for claude -p it is a list-price estimate, not a subscription bill")
+    return 0
+
+
+
 
 
 # ------------------------------------------------------------------ report --
@@ -379,12 +427,25 @@ def main(argv=None) -> int:
     mp.add_argument("--review-every", type=int, default=12, help="months between strategy reviews")
     mp.add_argument("--engine-dir", help="gymtropolis checkout (default: third_party/gymtropolis)")
     mp.add_argument("--report-only", metavar="RUN_DIR", help="rebuild video/report for an existing run")
+    mp.add_argument("--lessons", metavar="FILE", help="lessons JSON from `lessons` (LLM reviewer only)")
+    ls = sub.add_parser("lessons", help="build a lessons file from past Micropolis runs (+ benchmarks, reflections)")
+    ls.add_argument("runs", nargs="+", help="past run directories")
+    ls.add_argument("--bench-seeds", type=int, nargs="+", default=[9, 10, 11, 12, 13, 14, 15, 16])
+    ls.add_argument("--years", type=int, default=20)
+    ls.add_argument("--provider", help="LLM for self-reflection (e.g. claude-code); omit for measurements only")
+    ls.add_argument("--model")
+    ls.add_argument("--engine-dir")
+    ls.add_argument("--out", default="runs/lessons.json")
+    us = sub.add_parser("usage", help="LLM call and token usage from the ledger")
+    us.add_argument("--run", help="only calls tagged with this run name (substring)")
     r = sub.add_parser("report", help="print the state timeline of a run")
     r.add_argument("run", help="run directory or log.jsonl")
     args = p.parse_args(argv)
     cfg = load_config(args.config)
+    os.environ.setdefault("MAYOR_USAGE_LEDGER", str(Path(cfg["runs_dir"]) / "llm_usage.jsonl"))
     cmd = {"doctor": cmd_doctor, "windows": cmd_windows, "install": cmd_install, "calibrate": cmd_calibrate,
-           "observe": cmd_observe, "report": cmd_report, "micropolis": cmd_micropolis}[args.cmd]
+           "observe": cmd_observe, "report": cmd_report, "micropolis": cmd_micropolis,
+           "lessons": cmd_lessons, "usage": cmd_usage}[args.cmd]
     try:
         return cmd(cfg, args)
     except ModuleNotFoundError as e:
