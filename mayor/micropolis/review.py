@@ -142,9 +142,11 @@ Facts verified in this engine (by our own tests, not assumptions):
   at 0%: crime 167, road tiles 140). Yearly needs are in road_fund/police_fund/fire_fund; tax income is tax_fund.
 - Terrain and disasters (when on): the layout sits on the driest land found; slots that would touch water are
   skipped. Fires, floods and tornadoes can destroy zones and roads. Every month code compares the map with
-  what was built: destroyed zones free their slot (rebuilt as demand allows), missing power lines are
-  repaired first (costs money; while unaffordable nothing else is built). Missing roads are rebuilt only
-  with repair_roads=true. fire_tiles, flood_tiles, rubble_tiles and
+  what was built: missing power lines are repaired and destroyed zones/stations are rebuilt in their own
+  slots, whatever the demand (zones pass power to touching zones, so a burnt zone can cut power beyond it).
+  This upkeep comes before new building and does not count against max_builds_per_month; while it cannot
+  be afforded above reserve_funds nothing else is built. Missing roads are rebuilt only with
+  repair_roads=true. fire_tiles, flood_tiles, rubble_tiles and
   zones_lost_this_month are counted by code from the map. Fire stations and fire_funding limit fire spread.
   Low road_funding also turns roads into rubble.
 - Traffic pollutes (engine source scan.cpp: a road tile with light traffic adds pollution 50, heavy 75).
