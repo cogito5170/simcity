@@ -216,6 +216,15 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(p.used_slots.get(slot), "residential")
         self.assertFalse(p.lost)
 
+    def test_balance_jobs_holds_commerce_and_industry_when_jobs_outnumber_residents(self):
+        from mayor.micropolis.strategy import labor_base
+        st = dict(STATS, res_pop=400, com_pop=40, ind_pop=40, res_valve=1000, com_valve=1500, ind_valve=1500)
+        self.assertAlmostEqual(labor_base(st), 50 / 80)
+        mix = {"residential": 0.1, "commercial": 0.45, "industrial": 0.45}
+        self.assertIn(choose_zone(Strategy(zone_mix=mix), st), ("commercial", "industrial"))
+        self.assertEqual(choose_zone(Strategy(zone_mix=mix, balance_jobs=True), st), "residential")
+        self.assertIsNone(choose_zone(Strategy(balance_jobs=True), dict(st, res_valve=0)))
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 

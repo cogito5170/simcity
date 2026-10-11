@@ -154,6 +154,21 @@ Facts verified in this engine (by our own tests, not assumptions):
   gave mean population 15.7k vs 22.6k without (traffic_avg 29.5 vs 11.7) on flat maps, and 15.3k vs 19.7k
   (traffic 50.3 vs 9.6) with terrain+disasters. road_funding 100 (no decay): 14.8k flat, 13.3k terrain.
   The traffic->pollution link is from source; that it is the whole cause is not established.
+- DEMAND ENGINE (source simulate.cpp setValves, zone.cpp evalRes; effects measured, see below):
+  labor_base = (res_pop/8) / (com_pop + ind_pop), capped at 1.3, is given in MEASURED NOW. Because of an engine
+  bug (resRatio = min(indRatio, ...)) residential AND industrial demand both change each census by
+  (1.2*labor_base - 1)*600 + tax term (tax 5: +50, 7: 0, 8: -10, 9: -40, 10: -100). So below ~0.76 (tax 5),
+  ~0.83 (tax 7) or ~0.89 (tax 9) res and ind demand keep falling, then commercial follows: the city empties.
+  While residential is capped (res_pop > 500, no stadium) its valve is held at 0, and a residential zone then
+  grows only where land value - pollution > ~94; elsewhere housing slowly shrinks while existing commercial/
+  industrial zones keep growing in place, so labor_base sinks. Building more commercial/industrial during the
+  cap, or raising tax, speeds this up. A stadium lifts the cap.
+  Measured, fixed strategy, terrain+disasters, seeds 17-22, 20 years (mean population):
+  zone_mix R.7/C.15/I.15 tax 5: 19.7k; + balance_jobs: 20.7k (demand crashes 4/6 -> 0/6).
+  zone_mix R.5/C.3/I.2 tax 8: 11.2k (crash 6/6); + balance_jobs + save_for_specials: 17.3k (flat map: 11.6k -> 25.3k).
+  balance_jobs=true: no new commercial/industrial while labor_base < 1. save_for_specials=true: when a capped
+  demand needs a stadium/seaport/airport that is not affordable, stop building zones and save for it.
+  In earlier Claude Code runs on terrain, the cities that never got a stadium and let labor_base fall collapsed.
 - land_use "separated" puts new industry in its own district ~50 tiles from housing. Fixed-strategy tests,
   8 seeds, 20 years, tax 7%: separated peaked higher (mean 21.0k vs 18.3k) but ended lower (mean 8.6k vs
   11.4k) with higher average pollution (57 vs 45). Why pollution rose is not established (longer commutes?).
@@ -177,7 +192,8 @@ Return ONE JSON object, no prose:
   "reserve_funds": int {reserve}, "zones_per_police": int {police}, "zones_per_fire": int {fire},
   "power_type": "coal"|"nuclear", "max_builds_per_month": int {builds}, "build_specials": true|false,
   "land_use": "mixed"|"separated", "road_funding": int 0-100, "police_funding": int 0-100,
-  "fire_funding": int 0-100, "road_spacing": int 3-6, "repair_roads": true|false}},
+  "fire_funding": int 0-100, "road_spacing": int 3-6, "repair_roads": true|false,
+  "balance_jobs": true|false, "save_for_specials": true|false}},
  "reasoning": ["short points in Korean, citing the measured numbers you rely on"],
  "alternatives": [{{"option": "Korean", "why_not": "Korean"}}],
  "expected": {{"population": "up|down|flat", "funds": "...", "crime_avg": "...", "pollution_avg": "...", "traffic_avg": "..."}},

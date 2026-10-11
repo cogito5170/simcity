@@ -12,7 +12,7 @@ import numpy as np
 from .engine import City
 from .planner import Planner, choose_origin, slot_order
 from .review import Review, ReviewContext, RuleReviewer, evaluate
-from .strategy import Strategy, execute_month
+from .strategy import labor_base, Strategy, execute_month
 
 
 @dataclass
@@ -66,6 +66,7 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
         stats = city.stats()
         stats["zones_lost_this_month"] = float(damage["zones_lost"])
         stats["roads_lost_this_month"] = float(damage["roads_lost"] + damage["wires_lost"])
+        stats["labor_base"] = round(labor_base(stats), 2)
         date = str(city.date)
         prev = months[-1]["stats"] if months else None
         alerts = _alerts(stats, prev)

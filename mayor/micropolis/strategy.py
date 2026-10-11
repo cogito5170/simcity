@@ -42,6 +42,8 @@ class Strategy:
     fire_funding: int = 100       # % of fire station upkeep paid; lowers fire effect
     road_spacing: int = 6         # connector road after every N slots (3-6); only applies before the first zone
     repair_roads: bool = False    # rebuild road tiles lost to decay/disasters (power lines are always rebuilt)
+    balance_jobs: bool = False    # no new commercial/industrial while jobs outnumber residents (labor_base < 1)
+    save_for_specials: bool = False   # when a capped demand needs a stadium/seaport/airport we cannot afford, stop zoning and save
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -78,7 +80,7 @@ class Strategy:
             s.land_use = d["land_use"]
         elif "land_use" in d:
             notes.append(f"land_use: {d['land_use']!r} not mixed/separated, kept {s.land_use}")
-        for k in ("build_specials", "repair_roads"):
+        for k in ("build_specials", "repair_roads", "balance_jobs", "save_for_specials"):
             if isinstance(d.get(k), bool):
                 setattr(s, k, d[k])
         if d.get("power_type") in ("coal", "nuclear"):
@@ -86,6 +88,15 @@ class Strategy:
         elif "power_type" in d:
             notes.append(f"power_type: {d['power_type']!r} not coal/nuclear, kept {s.power_type}")
         return s, notes
+
+
+def labor_base(stats: dict) -> float:
+    """Engine setValves(): residents per job, (res_pop / 8) / (com_pop + ind_pop), capped at 1.3.
+
+    Because of an engine bug (resRatio = min(indRatio, ...)) residential AND industrial demand both
+    move by (1.2 * labor_base - 1) * 600 + tax effect each census: below ~0.83 at tax 7 they fall."""
+    jobs = stats.get("com_pop", 0) + stats.get("ind_pop", 0)
+    return 1.3 if jobs <= 0 else min(1.3, stats.get("res_pop", 0) / 8 / jobs)
 
 
 def choose_zone(strategy: Strategy, stats: dict, counts: dict | None = None) -> str | None:
@@ -100,6 +111,8 @@ def choose_zone(strategy: Strategy, stats: dict, counts: dict | None = None) -> 
     for z, vmax in VALVE_MAX.items():
         demand = stats[f"{z[:3]}_valve"] / vmax          # -1..1, exact engine value
         if demand <= 0:
+            continue
+        if strategy.balance_jobs and z != "residential" and labor_base(stats) < 1.0:
             continue
         share = counts.get(z, 0) / total if total else 0.0
         key = (strategy.zone_mix.get(z, 0) - share, demand)
@@ -157,6 +170,8 @@ def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_sinc
                 r = planner.build_special(kind)
                 done.append(r)
                 budget -= 1
+                if strategy.save_for_specials and r.skipped and "reserve" in r.detail:
+                    budget = 0   # keep the money for it instead of spending it on zones
                 break   # one big purchase per month
     # 3. services by ratio
     zones = planner.zones()
