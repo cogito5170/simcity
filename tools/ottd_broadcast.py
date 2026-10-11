@@ -3,17 +3,16 @@
     python tools/ottd_broadcast.py RUN_DIR PAYLOAD_DIR [--seconds 90 --fps 3]
 
 Each segment: pick a line to watch (the newest one first, then take turns), take `shotat` screenshots
-of it for --seconds at --fps, encode an H.264 MP4, and split it base64-encoded into documents of at most
-~240 KB (the page's database limit is 256 KB per document). Also writes state.json (company, lines,
-latest decision, money history). Prints one line per segment for the watcher:
+of it for --seconds at --fps and encode an H.264 MP4 (uploaded to the page's asset store by the watcher;
+the page's database only holds each clip's metadata). Also writes state.json (company, lines, latest
+decision, money history). Prints one line per segment for the watcher:
 
-    ready <seq> parts=<n> delete=<doc ids of the segment that fell out of the window>
+    ready <seq> mp4=<path> delete=<metadata doc id that fell out of the window>
 """
 
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import os
 import shutil
@@ -27,8 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mayor.openttd.admin import Admin  # noqa: E402
 
-CHUNK = 240_000
-MAX_B64 = 720_000      # 3 parts; the batch limit is 1 MiB
+MAX_B64 = 720_000      # keep each clip under ~540 KB so viewers load it quickly
 KEEP = 4
 
 
@@ -107,7 +105,7 @@ def main():
     run_dir, out, shots = Path(a.run_dir), Path(a.payload), Path(a.shots)
     out.mkdir(parents=True, exist_ok=True)
     adm = Admin(password="mayor", name="camera", gamescript=False)
-    seq, shown, parts_of = 0, {}, {}
+    seq, shown = 0, {}
     while True:
         seq += 1
         state = load_state(run_dir)
@@ -122,7 +120,7 @@ def main():
         time.sleep(1.5)                                   # let the last screenshot finish writing
         mp4 = out / f"seg_{seq}.mp4"
         # under 0.5% of pixels change per frame, so one keyframe per segment keeps it small;
-        # raise crf until the base64 fits the page's 1 MiB batch with room for the state document
+        # raise crf until the clip is small enough for viewers to load quickly
         crf = a.crf
         while True:
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(a.fps), "-i", str(frames / "f%04d.png"),
@@ -132,19 +130,14 @@ def main():
                 break
             crf += 4
         shutil.rmtree(frames, ignore_errors=True)
-        b64 = base64.b64encode(mp4.read_bytes()).decode()
-        chunks = [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
         state = load_state(run_dir)
-        meta = {"seq": seq, "parts": len(chunks), "crf": crf, "label": target["label"], "line": target["line"],
+        meta = {"seq": seq, "label": target["label"], "line": target["line"], "crf": crf,
                 "game_from": game_from, "game_to": (state.get("obs") or {}).get("date"),
-                "seconds": a.seconds, "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
-        for k, c in enumerate(chunks):
-            write_json(out / f"seg_{seq}_{k}.json", meta | {"part": k, "b64": c})
+                "seconds": a.seconds, "bytes": mp4.stat().st_size,
+                "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+        write_json(out / f"seg_{seq}.json", meta)
         write_json(out / "state.json", state_doc(run_dir, state, target, seq))
-        parts_of[seq] = len(chunks)
-        old = seq - KEEP
-        delete = [f"s{old:05d}p{k}" for k in range(parts_of.pop(old, 0))]
-        print(f"ready {seq} parts={len(chunks)} delete={','.join(delete) or '-'}", flush=True)
+        print(f"ready {seq} mp4={mp4} delete=s{seq - KEEP:05d}", flush=True)
 
 
 if __name__ == "__main__":

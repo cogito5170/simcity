@@ -163,25 +163,15 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   // ---------------------------------------------------------------- video
-  const parts = new Map();   // seq -> {meta, chunks[]}
-  const ready = [];          // complete segments not yet played, ascending seq
+  // each clip is an uploaded asset; its metadata document carries the URL
+  const ready = [];          // clips not yet played, ascending seq
   let played = 0, playing = null, lastState = null;
   const vid = $("vid");
 
-  function addPart(d) {
-    let e = parts.get(d.seq);
-    if (!e) { e = { meta: d, chunks: new Array(d.parts) }; parts.set(d.seq, e); }
-    e.chunks[d.part] = d.b64;
-    if (e.chunks.every((c) => typeof c === "string") && !e.done) {
-      e.done = true;
-      if (d.seq > played && !ready.some((r) => r.seq === d.seq)) {
-        const bin = atob(e.chunks.join("")), buf = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-        ready.push({ seq: d.seq, meta: d, url: URL.createObjectURL(new Blob([buf], { type: "video/mp4" })) });
-        ready.sort((a, b) => a.seq - b.seq);
-      }
-      e.chunks = null;
-    }
+  function addClip(d) {
+    if (!d || !d.url || d.seq <= played || ready.some((r) => r.seq === d.seq)) return;
+    ready.push(d);
+    ready.sort((a, b) => a.seq - b.seq);
   }
 
   function playNext() {
@@ -189,15 +179,15 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     if (!ready.length) { if (playing) { $("wait").hidden = false; $("wait").textContent = "다음 장면을 준비하는 중입니다 (90초마다 새 장면)."; } return; }
     if (!playing && ready.length > 2) ready.splice(0, ready.length - 2);   // joining late: start near the newest
     const seg = ready.shift();
-    if (playing) URL.revokeObjectURL(playing.url);
     playing = seg; played = seg.seq;
     vid.src = seg.url; vid.hidden = false; $("wait").hidden = true;
     vid.play().catch(() => {});
     $("caption").hidden = false;
-    $("capLabel").textContent = seg.meta.label || "";
-    $("capDate").textContent = seg.meta.game_from ? `${seg.meta.game_from} → ${seg.meta.game_to}` : "";
+    $("capLabel").textContent = seg.label || "";
+    $("capDate").textContent = seg.game_from ? `${seg.game_from} → ${seg.game_to}` : "";
   }
   vid.addEventListener("ended", playNext);
+  vid.addEventListener("error", () => { playing = null; playNext(); });
 
   // ---------------------------------------------------------------- state
   function chart(hist) {
@@ -280,7 +270,7 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     db.doc("live/state").onSnapshot((snap) => { if (snap.exists) { try { render(snap.data()); } catch (e) { console.error(e); } } },
       () => { $("liveText").textContent = "연결 끊김 · 새로고침해 주세요"; });
     db.collection("seg").onSnapshot((snap) => {
-      for (const ch of snap.docChanges()) if (ch.type !== "removed" && ch.doc.exists) { try { addPart(ch.doc.data()); } catch (e) { console.error(e); } }
+      for (const ch of snap.docChanges()) if (ch.type !== "removed" && ch.doc.exists) addClip(ch.doc.data());
       playNext();
     }, () => { $("liveText").textContent = "영상 연결 끊김 · 새로고침해 주세요"; });
   })();
