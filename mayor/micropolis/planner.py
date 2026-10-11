@@ -103,10 +103,16 @@ def choose_origin(tiles, pairs: int = 4, cols: int = 12) -> tuple[int, int, int]
     width = 3 * cols + cols // CONN_EVERY + 2
     for oy in range(12, WORLD_H - PERIOD * pairs - 2):
         for ox in range(13, WORLD_W - width - 3):
+            # hard rule: plant slot 0 (x ox-4..ox-1, y oy-6..oy-3) and the spine top must be dry, otherwise
+            # no plant can ever reach the grid (the other plant slots connect only through slot 0)
+            if box(integ, ox - 4, oy - 6, ox - 1, oy - 1):
+                continue
             x0, y0, x1, y1 = ox - 12, oy - 11, ox + width, oy + PERIOD * pairs
             score = (box(integ, x0, y0, x1, y1), box(tinteg, x0, y0, x1, y1), abs(ox - OX) + abs(oy - OY))
             if best is None or score < best[0]:
                 best = (score, ox, oy)
+    if best is None:
+        raise ValueError("no origin with a dry first plant slot")
     return best[1], best[2], best[0][0]
 
 
@@ -255,10 +261,18 @@ class Planner:
         tool = self.T.NUCLEAR_POWER if kind == "nuclear" else self.T.COAL_POWER
         tiles = self.city.tiles()
         taken = {(x, y) for x, y, _ in self.plants}
-        free = [(x, y) for x, y in self.plant_slots if (x, y) not in taken and not any(
+        first = self.plant_slots[0]
+
+        def connected(x, y):   # power reaches a plant only through slot 0 or a touching plant
+            return (x, y) == first or any(abs(x - px) + abs(y - py) == 4 for px, py in taken)
+        free = [(x, y) for x, y in self.plant_slots if (x, y) not in taken and connected(x, y) and not any(
             WATER[0] <= tiles[yy, xx] <= WATER[1] for xx in range(x - 1, x + 3) for yy in range(y - 1, y + 3))]
+        if first not in taken and first not in free:
+            free = []
+        elif first not in taken:
+            free = [first]   # the first plant must be slot 0 (it touches the spine)
         if not free:
-            return ActionResult(f"power:{kind}", False, detail="no dry plant slot left")
+            return ActionResult(f"power:{kind}", False, detail="no dry plant slot connected to the grid")
         x, y = free[0]
         calls = [(tool, x, y)]
         if not self.plants:   # first plant also needs the top of the spine

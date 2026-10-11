@@ -162,6 +162,22 @@ class EngineTests(unittest.TestCase):
             self.assertEqual((d["wires_lost"], d["zones_lost"]), (0, 0))
         self.assertEqual(choose_origin(np.zeros((100, 120), dtype=int))[:2], (14, 14))   # blank map: default
 
+    def test_first_plant_reaches_the_grid_on_terrain(self):
+        from mayor.micropolis.planner import WATER, Planner, choose_origin
+        c = City(seed=20, terrain=True)        # here the old origin put plant slot 0 on water
+        ox, oy, _ = choose_origin(c.tiles())
+        t = c.tiles()
+        self.assertFalse(((t[oy - 6:oy, ox - 4:ox] >= WATER[0]) & (t[oy - 6:oy, ox - 4:ox] <= WATER[1])).any())
+        c.e.set_funds(100000)
+        p = Planner(c, ox=ox, oy=oy)
+        self.assertTrue(p.build_power("coal").ok)
+        self.assertEqual(p.plants[0][:2], p.plant_slots[0])
+        for _ in range(6):
+            self.assertTrue(p.place("residential").ok)
+        for _ in range(4):
+            c.advance_month()
+        self.assertEqual(c.stats()["unpowered_zones"], 0)
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 
