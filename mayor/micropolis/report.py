@@ -113,7 +113,7 @@ def _strategy_changes(prev: dict | None, cur: dict) -> list[str]:
     return out
 
 
-def _review_cards(run: _Run) -> str:
+def _review_cards(run: _Run, fps: int = FPS) -> str:
     idx_by_date = {m["date"]: i for i, m in enumerate(run.months)}
     cards, prev = [], None
     for rv in run.reviews:
@@ -137,7 +137,7 @@ def _review_cards(run: _Run) -> str:
         cards.append(f'''
 <article class="review" id="r-{html.escape(rv["date"])}">
   <header><time>{rv["date"][:4]}년 {int(rv["date"][5:]):d}월</time><span class="src">{html.escape(src_label)}</span>
-    <button class="seek" type="button" data-t="{i / FPS:.2f}">영상에서 보기</button></header>
+    <button class="seek" type="button" data-t="{i / fps:.2f}">영상에서 보기</button></header>
   <ul class="why">{"".join(f"<li>{html.escape(w)}</li>" for w in rv.get("reasoning", []))}</ul>
   {f'<p class="changes">{" · ".join(html.escape(c) for c in changes)}</p>' if changes else ""}
   {f'<p class="expect">예상: {html.escape(exp)}</p>' if exp else ""}
@@ -321,7 +321,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
   <section><h2>시장의 판단 기록</h2>
     <p class="lede">재검토 때마다 무엇을 왜 바꿨는지, 무엇을 예상했는지, 무엇을 모르는지를 남깁니다.
       다음 재검토에서 그 예상을 실제 결과와 비교해 채점합니다.</p>
-    <div class="log">{_review_cards(run)}</div></section>
+    <div class="log">{_review_cards(run, media.get("fps", FPS))}</div></section>
   <section class="facts">
     <section><h3>엔진으로 확인한 규칙</h3><ul>
       <li>도로는 전기를 전달하지 않고, 맞닿은 구역끼리 전기를 전달합니다.</li>
@@ -351,7 +351,7 @@ def build_page(run: _Run, media: dict) -> tuple[str, str]:
 def make_report(run_dir: str | Path) -> dict:
     run_dir = Path(run_dir)
     run = _Run(run_dir)
-    media = render_run(run, run_dir, fps=FPS)
+    media = render_run(run, run_dir)
     full, fragment = build_page(run, media)
     (run_dir / "index.html").write_text(full, encoding="utf-8")
     (run_dir / "artifact.html").write_text(fragment, encoding="utf-8")

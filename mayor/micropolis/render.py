@@ -72,8 +72,16 @@ def frame(tiles_mod, tiles: np.ndarray, box, month: dict) -> Image.Image:
     return img
 
 
-def render_run(run, out_dir: Path, fps: int = 8) -> dict:
-    """Write video.mp4 (if ffmpeg exists), poster.png and yearly keyframes into out_dir."""
+def video_fps(months: int, base: int = 8, max_seconds: int = 90) -> int:
+    """8 fps (a game year in 1.5 s) unless that would make the video longer than ~90 s."""
+    return max(base, -(-months // max_seconds))
+
+
+def render_run(run, out_dir: Path, fps: int | None = None) -> dict:
+    """Write video.mp4 (if ffmpeg exists), poster.png and yearly keyframes into out_dir.
+
+    Frames are streamed to ffmpeg one by one, so a 100-year run does not hold
+    1,200+ full-size images in memory."""
     from .engine import load_modules
     _, tiles_mod = load_modules()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -81,27 +89,30 @@ def render_run(run, out_dir: Path, fps: int = 8) -> dict:
     kdir.mkdir(exist_ok=True)
     tiles = np.stack(run.tiles)
     box = crop_box(tiles)
-    frames = []
+    fps = fps or video_fps(len(run.months))
+    ffmpeg = shutil.which("ffmpeg")
+    proc = None
     keyframes = []
+    img = None
     for i, month in enumerate(run.months):
         img = frame(tiles_mod, tiles[i], box, month)
-        frames.append(img)
+        if ffmpeg and proc is None:
+            w, h = img.size
+            cmd = [ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}",
+                   "-r", str(fps), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23",
+                   "-movflags", "+faststart", str(out_dir / "video.mp4")]
+            proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        if proc:
+            proc.stdin.write(img.tobytes())
         if month["date"].endswith("-01") or i == len(run.months) - 1:
             name = f"keyframes/{month['date']}.png"
             img.save(out_dir / name)
             keyframes.append({"date": month["date"], "file": name})
-    frames[-1].save(out_dir / "poster.png")
-    result = {"keyframes": keyframes, "poster": "poster.png", "video": None, "size": frames[-1].size}
-    ffmpeg = shutil.which("ffmpeg")
-    if ffmpeg:
-        w, h = frames[0].size
-        hold = [frames[-1]] * (fps * 2)   # pause on the final city
-        cmd = [ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}",
-               "-r", str(fps), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23",
-               "-movflags", "+faststart", str(out_dir / "video.mp4")]
-        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-        for f in frames + hold:
-            proc.stdin.write(f.tobytes())
+    img.save(out_dir / "poster.png")
+    result = {"keyframes": keyframes, "poster": "poster.png", "video": None, "size": img.size, "fps": fps}
+    if proc:
+        for _ in range(fps * 2):   # pause on the final city
+            proc.stdin.write(img.tobytes())
         proc.stdin.close()
         if proc.wait() == 0:
             result["video"] = "video.mp4"
