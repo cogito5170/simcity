@@ -114,6 +114,36 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(c.stats()["unpowered_zones"], 0)   # regression: districts must touch the spine
         self.assertTrue(all((s[0] >= IND_PAIR_START) == (k == "industrial") for s, k in p.used_slots.items()))
 
+    def test_department_funding_has_effect(self):
+        c = City(seed=9)
+        if not c.has_budget_control:
+            self.skipTest("engine built without the budget patch")
+        from mayor.micropolis.run import run_mayor
+        from mayor.micropolis.lessons import _Fixed
+        with tempfile.TemporaryDirectory() as d:
+            full = run_mayor(years=6, seed=9, reviewer=_Fixed(Strategy()), out_dir=Path(d) / "a").months[-1]["stats"]
+            cut = run_mayor(years=6, seed=9, reviewer=_Fixed(Strategy(road_funding=50, police_funding=50)),
+                            out_dir=Path(d) / "b").months[-1]["stats"]
+        self.assertEqual((full["road_effect"], full["police_effect"]), (32, 1000))
+        self.assertEqual((cut["road_pct"], cut["auto_budget"]), (50, 0))
+        self.assertLess(cut["road_effect"], 32)        # needs mp_update_fund_effects (headless engines skip it)
+        self.assertLess(cut["police_effect"], 1000)
+
+    def test_road_spacing_locks_after_first_zone(self):
+        from mayor.micropolis.planner import Planner
+        c = City(seed=1)
+        c.e.set_funds(100000)
+        p = Planner(c)
+        self.assertTrue(p.set_road_spacing(3))
+        p.build_power("coal")
+        for _ in range(8):
+            self.assertTrue(p.place("residential").ok)
+        self.assertFalse(p.set_road_spacing(6))
+        self.assertEqual(p.conn_every, 3)
+        for _ in range(3):
+            c.advance_month()
+        self.assertEqual(c.stats()["unpowered_zones"], 0)   # wire crossings follow the spacing
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 

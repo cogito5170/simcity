@@ -106,7 +106,8 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
 
 
 def planner_summary(p: Planner) -> dict:
-    free = sum(1 for s in slot_order() if s not in p.used_slots and s not in p.blocked)
+    free = sum(1 for s in slot_order(conn_every=p.conn_every) if s not in p.used_slots and s not in p.blocked)
     return {"residential": p.count("residential"), "commercial": p.count("commercial"),
             "industrial": p.count("industrial"), "police": p.count("police"), "fire": p.count("fire"),
-            "power_plants": [k for _, _, k in p.plants], "free_slots": free, "blocked_slots": len(p.blocked)}
+            "power_plants": [k for _, _, k in p.plants], "free_slots": free, "blocked_slots": len(p.blocked),
+            "road_spacing": p.conn_every, "road_spacing_locked": bool(p.used_slots)}

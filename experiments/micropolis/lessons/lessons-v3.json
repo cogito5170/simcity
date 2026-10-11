@@ -1,0 +1,3354 @@
+{
+  "version": 3,
+  "benchmarks": [
+    {
+      "strategy": "fixed, tax 5%, reserve 3000, 2 builds/month, mixed",
+      "seeds": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "final_mean": 10438,
+      "final_median": 9990,
+      "peak_mean": 19388,
+      "months_stalled_mean": 104.6
+    },
+    {
+      "strategy": "fixed, tax 7%, reserve 3000, 2 builds/month, mixed",
+      "seeds": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "final_mean": 8360,
+      "final_median": 8640,
+      "peak_mean": 19455,
+      "months_stalled_mean": 91.1
+    },
+    {
+      "strategy": "fixed, tax 9%, reserve 3000, 2 builds/month, mixed",
+      "seeds": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "final_mean": 10122,
+      "final_median": 10270,
+      "peak_mean": 18690,
+      "months_stalled_mean": 89.9
+    },
+    {
+      "strategy": "fixed, tax 11%, reserve 3000, 2 builds/month, mixed",
+      "seeds": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "final_mean": 2942,
+      "final_median": 1940,
+      "peak_mean": 12102,
+      "months_stalled_mean": 66.2
+    }
+  ],
+  "grid": {
+    "knobs": {
+      "tax_rate": [
+        5,
+        7,
+        9
+      ],
+      "residential_share": [
+        0.4,
+        0.5,
+        0.6,
+        0.7
+      ],
+      "reserve_funds": [
+        1000,
+        3000
+      ],
+      "max_builds_per_month": [
+        2,
+        4
+      ],
+      "land_use": [
+        "mixed",
+        "separated"
+      ]
+    },
+    "metric": "20-year mean population",
+    "main_effects": {
+      "tax_rate": {
+        "5": 7170,
+        "7": 6544,
+        "9": 5885
+      },
+      "residential_share": {
+        "0.4": 2557,
+        "0.5": 5186,
+        "0.6": 7950,
+        "0.7": 10439
+      },
+      "reserve_funds": {
+        "1000": 7238,
+        "3000": 5828
+      },
+      "max_builds_per_month": {
+        "2": 7283,
+        "4": 5783
+      },
+      "land_use": {
+        "mixed": 5588,
+        "separated": 7478
+      }
+    },
+    "best": [
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 14306,
+        "mean_pop_min_seed": 10456,
+        "mean_pop_max_seed": 17105,
+        "final_mean": 14732,
+        "peak_mean": 23130
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 12951,
+        "mean_pop_min_seed": 10695,
+        "mean_pop_max_seed": 14467,
+        "final_mean": 30208,
+        "peak_mean": 30485
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 12137,
+        "mean_pop_min_seed": 5791,
+        "mean_pop_max_seed": 17302,
+        "final_mean": 22535,
+        "peak_mean": 28830
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11941,
+        "mean_pop_min_seed": 7736,
+        "mean_pop_max_seed": 14206,
+        "final_mean": 20358,
+        "peak_mean": 24568
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11867,
+        "mean_pop_min_seed": 9912,
+        "mean_pop_max_seed": 13989,
+        "final_mean": 21960,
+        "peak_mean": 25320
+      }
+    ],
+    "worst": [
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1448,
+        "mean_pop_min_seed": 984,
+        "mean_pop_max_seed": 1761,
+        "final_mean": 1138,
+        "peak_mean": 4955
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1293,
+        "mean_pop_min_seed": 1147,
+        "mean_pop_max_seed": 1602,
+        "final_mean": 892,
+        "peak_mean": 4078
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1212,
+        "mean_pop_min_seed": 997,
+        "mean_pop_max_seed": 1395,
+        "final_mean": 1602,
+        "peak_mean": 3720
+      }
+    ],
+    "rows": [
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1583,
+        "mean_pop_min_seed": 1229,
+        "mean_pop_max_seed": 2297,
+        "final_mean": 1525,
+        "peak_mean": 5142
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3256,
+        "mean_pop_min_seed": 1145,
+        "mean_pop_max_seed": 8649,
+        "final_mean": 7490,
+        "peak_mean": 11330
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2005,
+        "mean_pop_min_seed": 1200,
+        "mean_pop_max_seed": 3680,
+        "final_mean": 1868,
+        "peak_mean": 7400
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 4528,
+        "mean_pop_min_seed": 1272,
+        "mean_pop_max_seed": 6966,
+        "final_mean": 3925,
+        "peak_mean": 17210
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1727,
+        "mean_pop_min_seed": 1182,
+        "mean_pop_max_seed": 3218,
+        "final_mean": 3265,
+        "peak_mean": 5665
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 5747,
+        "mean_pop_min_seed": 1098,
+        "mean_pop_max_seed": 11063,
+        "final_mean": 6008,
+        "peak_mean": 15380
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1829,
+        "mean_pop_min_seed": 1368,
+        "mean_pop_max_seed": 2511,
+        "final_mean": 2700,
+        "peak_mean": 7035
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2316,
+        "mean_pop_min_seed": 1105,
+        "mean_pop_max_seed": 10066,
+        "final_mean": 3155,
+        "peak_mean": 5815
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 5864,
+        "mean_pop_min_seed": 1599,
+        "mean_pop_max_seed": 9310,
+        "final_mean": 4295,
+        "peak_mean": 16642
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8605,
+        "mean_pop_min_seed": 2379,
+        "mean_pop_max_seed": 12987,
+        "final_mean": 7150,
+        "peak_mean": 22065
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3653,
+        "mean_pop_min_seed": 1516,
+        "mean_pop_max_seed": 5576,
+        "final_mean": 4290,
+        "peak_mean": 14568
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8894,
+        "mean_pop_min_seed": 6075,
+        "mean_pop_max_seed": 11432,
+        "final_mean": 9180,
+        "peak_mean": 25278
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3372,
+        "mean_pop_min_seed": 1642,
+        "mean_pop_max_seed": 5230,
+        "final_mean": 2515,
+        "peak_mean": 10590
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 9110,
+        "mean_pop_min_seed": 2895,
+        "mean_pop_max_seed": 12344,
+        "final_mean": 7480,
+        "peak_mean": 22135
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3635,
+        "mean_pop_min_seed": 1300,
+        "mean_pop_max_seed": 6887,
+        "final_mean": 6795,
+        "peak_mean": 11498
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1566,
+        "mean_pop_min_seed": 1234,
+        "mean_pop_max_seed": 2175,
+        "final_mean": 1275,
+        "peak_mean": 4442
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8463,
+        "mean_pop_min_seed": 1802,
+        "mean_pop_max_seed": 11210,
+        "final_mean": 8482,
+        "peak_mean": 21118
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11941,
+        "mean_pop_min_seed": 7736,
+        "mean_pop_max_seed": 14206,
+        "final_mean": 20358,
+        "peak_mean": 24568
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8958,
+        "mean_pop_min_seed": 4873,
+        "mean_pop_max_seed": 13142,
+        "final_mean": 10010,
+        "peak_mean": 22158
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11214,
+        "mean_pop_min_seed": 6744,
+        "mean_pop_max_seed": 13792,
+        "final_mean": 21498,
+        "peak_mean": 27820
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8477,
+        "mean_pop_min_seed": 5053,
+        "mean_pop_max_seed": 12299,
+        "final_mean": 10438,
+        "peak_mean": 19388
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10710,
+        "mean_pop_min_seed": 8406,
+        "mean_pop_max_seed": 13305,
+        "final_mean": 21010,
+        "peak_mean": 23318
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 6831,
+        "mean_pop_min_seed": 2255,
+        "mean_pop_max_seed": 9851,
+        "final_mean": 13032,
+        "peak_mean": 17492
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 4112,
+        "mean_pop_min_seed": 1925,
+        "mean_pop_max_seed": 6598,
+        "final_mean": 6175,
+        "peak_mean": 12702
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10998,
+        "mean_pop_min_seed": 9168,
+        "mean_pop_max_seed": 12499,
+        "final_mean": 12602,
+        "peak_mean": 20890
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11137,
+        "mean_pop_min_seed": 7961,
+        "mean_pop_max_seed": 13412,
+        "final_mean": 16170,
+        "peak_mean": 23015
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10155,
+        "mean_pop_min_seed": 4986,
+        "mean_pop_max_seed": 13780,
+        "final_mean": 10510,
+        "peak_mean": 21560
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 12951,
+        "mean_pop_min_seed": 10695,
+        "mean_pop_max_seed": 14467,
+        "final_mean": 30208,
+        "peak_mean": 30485
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11619,
+        "mean_pop_min_seed": 9946,
+        "mean_pop_max_seed": 15016,
+        "final_mean": 13630,
+        "peak_mean": 19670
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 14306,
+        "mean_pop_min_seed": 10456,
+        "mean_pop_max_seed": 17105,
+        "final_mean": 14732,
+        "peak_mean": 23130
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8882,
+        "mean_pop_min_seed": 5673,
+        "mean_pop_max_seed": 11657,
+        "final_mean": 10192,
+        "peak_mean": 19030
+      },
+      {
+        "tax_rate": 5,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11002,
+        "mean_pop_min_seed": 7983,
+        "mean_pop_max_seed": 13837,
+        "final_mean": 13608,
+        "peak_mean": 22345
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1529,
+        "mean_pop_min_seed": 1100,
+        "mean_pop_max_seed": 2098,
+        "final_mean": 792,
+        "peak_mean": 4950
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 4501,
+        "mean_pop_min_seed": 1131,
+        "mean_pop_max_seed": 11477,
+        "final_mean": 4630,
+        "peak_mean": 13832
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2335,
+        "mean_pop_min_seed": 1931,
+        "mean_pop_max_seed": 2886,
+        "final_mean": 1888,
+        "peak_mean": 9838
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 5657,
+        "mean_pop_min_seed": 993,
+        "mean_pop_max_seed": 9596,
+        "final_mean": 5612,
+        "peak_mean": 17760
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1787,
+        "mean_pop_min_seed": 1083,
+        "mean_pop_max_seed": 2346,
+        "final_mean": 2165,
+        "peak_mean": 5808
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3579,
+        "mean_pop_min_seed": 964,
+        "mean_pop_max_seed": 9326,
+        "final_mean": 4110,
+        "peak_mean": 12418
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1834,
+        "mean_pop_min_seed": 1045,
+        "mean_pop_max_seed": 2549,
+        "final_mean": 1552,
+        "peak_mean": 6498
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1854,
+        "mean_pop_min_seed": 1012,
+        "mean_pop_max_seed": 7095,
+        "final_mean": 2470,
+        "peak_mean": 5390
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3825,
+        "mean_pop_min_seed": 1802,
+        "mean_pop_max_seed": 5524,
+        "final_mean": 4162,
+        "peak_mean": 12610
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10284,
+        "mean_pop_min_seed": 8304,
+        "mean_pop_max_seed": 13940,
+        "final_mean": 7708,
+        "peak_mean": 26320
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 4865,
+        "mean_pop_min_seed": 1610,
+        "mean_pop_max_seed": 10153,
+        "final_mean": 3570,
+        "peak_mean": 15625
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 7920,
+        "mean_pop_min_seed": 3689,
+        "mean_pop_max_seed": 11525,
+        "final_mean": 7292,
+        "peak_mean": 23368
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3397,
+        "mean_pop_min_seed": 1502,
+        "mean_pop_max_seed": 7127,
+        "final_mean": 3118,
+        "peak_mean": 11022
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 9291,
+        "mean_pop_min_seed": 1354,
+        "mean_pop_max_seed": 12741,
+        "final_mean": 11858,
+        "peak_mean": 20080
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2335,
+        "mean_pop_min_seed": 1156,
+        "mean_pop_max_seed": 3379,
+        "final_mean": 2012,
+        "peak_mean": 7428
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1293,
+        "mean_pop_min_seed": 1147,
+        "mean_pop_max_seed": 1602,
+        "final_mean": 892,
+        "peak_mean": 4078
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 6442,
+        "mean_pop_min_seed": 1291,
+        "mean_pop_max_seed": 10617,
+        "final_mean": 5455,
+        "peak_mean": 17000
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11136,
+        "mean_pop_min_seed": 6570,
+        "mean_pop_max_seed": 13512,
+        "final_mean": 23005,
+        "peak_mean": 27152
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8475,
+        "mean_pop_min_seed": 3518,
+        "mean_pop_max_seed": 10865,
+        "final_mean": 7785,
+        "peak_mean": 21008
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8942,
+        "mean_pop_min_seed": 4779,
+        "mean_pop_max_seed": 13322,
+        "final_mean": 8568,
+        "peak_mean": 23340
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 7382,
+        "mean_pop_min_seed": 4182,
+        "mean_pop_max_seed": 11308,
+        "final_mean": 8360,
+        "peak_mean": 19455
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10427,
+        "mean_pop_min_seed": 8373,
+        "mean_pop_max_seed": 11610,
+        "final_mean": 13645,
+        "peak_mean": 22032
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 5841,
+        "mean_pop_min_seed": 3298,
+        "mean_pop_max_seed": 9062,
+        "final_mean": 6642,
+        "peak_mean": 17812
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1982,
+        "mean_pop_min_seed": 1645,
+        "mean_pop_max_seed": 2807,
+        "final_mean": 3185,
+        "peak_mean": 5710
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8966,
+        "mean_pop_min_seed": 5722,
+        "mean_pop_max_seed": 10833,
+        "final_mean": 10792,
+        "peak_mean": 20588
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11867,
+        "mean_pop_min_seed": 9912,
+        "mean_pop_max_seed": 13989,
+        "final_mean": 21960,
+        "peak_mean": 25320
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10410,
+        "mean_pop_min_seed": 6794,
+        "mean_pop_max_seed": 12278,
+        "final_mean": 14950,
+        "peak_mean": 24130
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 12137,
+        "mean_pop_min_seed": 5791,
+        "mean_pop_max_seed": 17302,
+        "final_mean": 22535,
+        "peak_mean": 28830
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10332,
+        "mean_pop_min_seed": 7139,
+        "mean_pop_max_seed": 13754,
+        "final_mean": 10958,
+        "peak_mean": 19275
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 11133,
+        "mean_pop_min_seed": 8105,
+        "mean_pop_max_seed": 12705,
+        "final_mean": 10650,
+        "peak_mean": 21662
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8333,
+        "mean_pop_min_seed": 5908,
+        "mean_pop_max_seed": 11625,
+        "final_mean": 13858,
+        "peak_mean": 20340
+      },
+      {
+        "tax_rate": 7,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 9318,
+        "mean_pop_min_seed": 6918,
+        "mean_pop_max_seed": 10611,
+        "final_mean": 17972,
+        "peak_mean": 21375
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1448,
+        "mean_pop_min_seed": 984,
+        "mean_pop_max_seed": 1761,
+        "final_mean": 1138,
+        "peak_mean": 4955
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2735,
+        "mean_pop_min_seed": 987,
+        "mean_pop_max_seed": 9892,
+        "final_mean": 3725,
+        "peak_mean": 7828
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1600,
+        "mean_pop_min_seed": 1072,
+        "mean_pop_max_seed": 3014,
+        "final_mean": 1048,
+        "peak_mean": 6618
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2070,
+        "mean_pop_min_seed": 908,
+        "mean_pop_max_seed": 5476,
+        "final_mean": 4005,
+        "peak_mean": 8878
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1608,
+        "mean_pop_min_seed": 1052,
+        "mean_pop_max_seed": 2710,
+        "final_mean": 1602,
+        "peak_mean": 5035
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2381,
+        "mean_pop_min_seed": 987,
+        "mean_pop_max_seed": 7906,
+        "final_mean": 3475,
+        "peak_mean": 7990
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1847,
+        "mean_pop_min_seed": 1024,
+        "mean_pop_max_seed": 3098,
+        "final_mean": 930,
+        "peak_mean": 7292
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.4,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1623,
+        "mean_pop_min_seed": 960,
+        "mean_pop_max_seed": 5953,
+        "final_mean": 1175,
+        "peak_mean": 4972
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3750,
+        "mean_pop_min_seed": 1284,
+        "mean_pop_max_seed": 6064,
+        "final_mean": 4892,
+        "peak_mean": 12945
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 7962,
+        "mean_pop_min_seed": 1419,
+        "mean_pop_max_seed": 12934,
+        "final_mean": 11910,
+        "peak_mean": 20730
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 3053,
+        "mean_pop_min_seed": 1487,
+        "mean_pop_max_seed": 5897,
+        "final_mean": 2515,
+        "peak_mean": 12000
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 6187,
+        "mean_pop_min_seed": 1503,
+        "mean_pop_max_seed": 9470,
+        "final_mean": 5672,
+        "peak_mean": 21802
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2886,
+        "mean_pop_min_seed": 1167,
+        "mean_pop_max_seed": 4316,
+        "final_mean": 1050,
+        "peak_mean": 10150
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8818,
+        "mean_pop_min_seed": 2717,
+        "mean_pop_max_seed": 12032,
+        "final_mean": 10015,
+        "peak_mean": 22498
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 2683,
+        "mean_pop_min_seed": 1331,
+        "mean_pop_max_seed": 3801,
+        "final_mean": 3695,
+        "peak_mean": 9805
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.5,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1212,
+        "mean_pop_min_seed": 997,
+        "mean_pop_max_seed": 1395,
+        "final_mean": 1602,
+        "peak_mean": 3720
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 7265,
+        "mean_pop_min_seed": 3975,
+        "mean_pop_max_seed": 11573,
+        "final_mean": 5950,
+        "peak_mean": 19588
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10735,
+        "mean_pop_min_seed": 6990,
+        "mean_pop_max_seed": 14238,
+        "final_mean": 14935,
+        "peak_mean": 25765
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 6786,
+        "mean_pop_min_seed": 5790,
+        "mean_pop_max_seed": 7950,
+        "final_mean": 7432,
+        "peak_mean": 21168
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10837,
+        "mean_pop_min_seed": 4708,
+        "mean_pop_max_seed": 14260,
+        "final_mean": 13108,
+        "peak_mean": 25128
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 7541,
+        "mean_pop_min_seed": 2600,
+        "mean_pop_max_seed": 10652,
+        "final_mean": 10122,
+        "peak_mean": 18690
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 9168,
+        "mean_pop_min_seed": 6033,
+        "mean_pop_max_seed": 11895,
+        "final_mean": 9665,
+        "peak_mean": 21278
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 5326,
+        "mean_pop_min_seed": 3374,
+        "mean_pop_max_seed": 7066,
+        "final_mean": 3100,
+        "peak_mean": 16398
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.6,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 1805,
+        "mean_pop_min_seed": 1172,
+        "mean_pop_max_seed": 3670,
+        "final_mean": 1928,
+        "peak_mean": 5735
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 9461,
+        "mean_pop_min_seed": 5203,
+        "mean_pop_max_seed": 11317,
+        "final_mean": 11795,
+        "peak_mean": 20812
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10547,
+        "mean_pop_min_seed": 6986,
+        "mean_pop_max_seed": 12613,
+        "final_mean": 17215,
+        "peak_mean": 23318
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 8730,
+        "mean_pop_min_seed": 1705,
+        "mean_pop_max_seed": 12192,
+        "final_mean": 10702,
+        "peak_mean": 19680
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 1000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10775,
+        "mean_pop_min_seed": 5905,
+        "mean_pop_max_seed": 14206,
+        "final_mean": 26985,
+        "peak_mean": 29452
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10475,
+        "mean_pop_min_seed": 7648,
+        "mean_pop_max_seed": 14978,
+        "final_mean": 11552,
+        "peak_mean": 19435
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 2,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 10022,
+        "mean_pop_min_seed": 7448,
+        "mean_pop_max_seed": 13040,
+        "final_mean": 13640,
+        "peak_mean": 20628
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "mixed",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 7629,
+        "mean_pop_min_seed": 5852,
+        "mean_pop_max_seed": 9356,
+        "final_mean": 10115,
+        "peak_mean": 18480
+      },
+      {
+        "tax_rate": 9,
+        "residential_share": 0.7,
+        "reserve_funds": 3000,
+        "max_builds_per_month": 4,
+        "land_use": "separated",
+        "seeds": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "mean_pop": 9353,
+        "mean_pop_min_seed": 8662,
+        "mean_pop_max_seed": 10662,
+        "final_mean": 11488,
+        "peak_mean": 18940
+      }
+    ]
+  },
+  "tools": {
+    "base": {
+      "tax_rate": 5,
+      "residential_share": 0.7,
+      "reserve_funds": 3000,
+      "max_builds_per_month": 2,
+      "land_use": "separated"
+    },
+    "knobs": {
+      "road_spacing": [
+        3,
+        4,
+        6
+      ],
+      "road_funding": [
+        50,
+        75,
+        100
+      ],
+      "police_funding": [
+        50,
+        100
+      ],
+      "fire_funding": [
+        50,
+        100
+      ]
+    },
+    "main_effects": {
+      "road_spacing": {
+        "3": 17688,
+        "4": 17193,
+        "6": 19383
+      },
+      "road_funding": {
+        "50": 21391,
+        "75": 20049,
+        "100": 12824
+      },
+      "police_funding": {
+        "50": 17983,
+        "100": 18193
+      },
+      "fire_funding": {
+        "50": 18036,
+        "100": 18140
+      }
+    },
+    "crime_by_police_funding": {
+      "police_funding": {
+        "50": 102,
+        "100": 91
+      }
+    },
+    "road_tiles_by_road_funding": {
+      "road_funding": {
+        "50": 162,
+        "75": 200,
+        "100": 249
+      }
+    },
+    "best": [
+      {
+        "road_spacing": 6,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 23671,
+        "mean_pop_min_seed": 22293,
+        "mean_pop_max_seed": 26315,
+        "crime_mean": 98.7,
+        "road_tiles_end": 156
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 23374,
+        "mean_pop_min_seed": 21016,
+        "mean_pop_max_seed": 25292,
+        "crime_mean": 87.4,
+        "road_tiles_end": 151
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 22721,
+        "mean_pop_min_seed": 20923,
+        "mean_pop_max_seed": 24620,
+        "crime_mean": 87.5,
+        "road_tiles_end": 200
+      }
+    ],
+    "rows": [
+      {
+        "road_spacing": 3,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 20442,
+        "mean_pop_min_seed": 17201,
+        "mean_pop_max_seed": 23097,
+        "crime_mean": 104.3,
+        "road_tiles_end": 184
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 21560,
+        "mean_pop_min_seed": 20624,
+        "mean_pop_max_seed": 23228,
+        "crime_mean": 103.7,
+        "road_tiles_end": 180
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 21493,
+        "mean_pop_min_seed": 17981,
+        "mean_pop_max_seed": 24699,
+        "crime_mean": 87.1,
+        "road_tiles_end": 182
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 20819,
+        "mean_pop_min_seed": 18866,
+        "mean_pop_max_seed": 22680,
+        "crime_mean": 89.7,
+        "road_tiles_end": 159
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 75,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 19588,
+        "mean_pop_min_seed": 18042,
+        "mean_pop_max_seed": 21077,
+        "crime_mean": 107.7,
+        "road_tiles_end": 235
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 75,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 19477,
+        "mean_pop_min_seed": 18379,
+        "mean_pop_max_seed": 21186,
+        "crime_mean": 110.9,
+        "road_tiles_end": 214
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 18417,
+        "mean_pop_min_seed": 17532,
+        "mean_pop_max_seed": 19335,
+        "crime_mean": 92.9,
+        "road_tiles_end": 202
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 18169,
+        "mean_pop_min_seed": 17315,
+        "mean_pop_max_seed": 19004,
+        "crime_mean": 96.5,
+        "road_tiles_end": 180
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 100,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 12624,
+        "mean_pop_min_seed": 8984,
+        "mean_pop_max_seed": 15218,
+        "crime_mean": 104.9,
+        "road_tiles_end": 264
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 100,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 13148,
+        "mean_pop_min_seed": 9293,
+        "mean_pop_max_seed": 15607,
+        "crime_mean": 107.3,
+        "road_tiles_end": 259
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 100,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 13559,
+        "mean_pop_min_seed": 8483,
+        "mean_pop_max_seed": 16039,
+        "crime_mean": 94.7,
+        "road_tiles_end": 263
+      },
+      {
+        "road_spacing": 3,
+        "road_funding": 100,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 12957,
+        "mean_pop_min_seed": 8343,
+        "mean_pop_max_seed": 15939,
+        "crime_mean": 101.8,
+        "road_tiles_end": 254
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 19932,
+        "mean_pop_min_seed": 8390,
+        "mean_pop_max_seed": 23248,
+        "crime_mean": 102.2,
+        "road_tiles_end": 166
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 19756,
+        "mean_pop_min_seed": 1134,
+        "mean_pop_max_seed": 23852,
+        "crime_mean": 101.0,
+        "road_tiles_end": 158
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 20747,
+        "mean_pop_min_seed": 4229,
+        "mean_pop_max_seed": 23978,
+        "crime_mean": 82.5,
+        "road_tiles_end": 165
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 20078,
+        "mean_pop_min_seed": 7960,
+        "mean_pop_max_seed": 23927,
+        "crime_mean": 85.1,
+        "road_tiles_end": 147
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 75,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 20244,
+        "mean_pop_min_seed": 13896,
+        "mean_pop_max_seed": 22279,
+        "crime_mean": 105.2,
+        "road_tiles_end": 222
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 75,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 19962,
+        "mean_pop_min_seed": 18256,
+        "mean_pop_max_seed": 22524,
+        "crime_mean": 109.6,
+        "road_tiles_end": 204
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 20146,
+        "mean_pop_min_seed": 17740,
+        "mean_pop_max_seed": 22847,
+        "crime_mean": 91.3,
+        "road_tiles_end": 196
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 18973,
+        "mean_pop_min_seed": 17716,
+        "mean_pop_max_seed": 20454,
+        "crime_mean": 98.5,
+        "road_tiles_end": 168
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 100,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 11079,
+        "mean_pop_min_seed": 9489,
+        "mean_pop_max_seed": 12418,
+        "crime_mean": 91.7,
+        "road_tiles_end": 269
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 100,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 11259,
+        "mean_pop_min_seed": 9360,
+        "mean_pop_max_seed": 12418,
+        "crime_mean": 94.8,
+        "road_tiles_end": 248
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 100,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 10929,
+        "mean_pop_min_seed": 9005,
+        "mean_pop_max_seed": 16921,
+        "crime_mean": 88.6,
+        "road_tiles_end": 247
+      },
+      {
+        "road_spacing": 4,
+        "road_funding": 100,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 13216,
+        "mean_pop_min_seed": 9894,
+        "mean_pop_max_seed": 16600,
+        "crime_mean": 91.9,
+        "road_tiles_end": 226
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 22305,
+        "mean_pop_min_seed": 16109,
+        "mean_pop_max_seed": 25130,
+        "crime_mean": 98.2,
+        "road_tiles_end": 158
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 50,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 23671,
+        "mean_pop_min_seed": 22293,
+        "mean_pop_max_seed": 26315,
+        "crime_mean": 98.7,
+        "road_tiles_end": 156
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 23374,
+        "mean_pop_min_seed": 21016,
+        "mean_pop_max_seed": 25292,
+        "crime_mean": 87.4,
+        "road_tiles_end": 151
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 50,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 22511,
+        "mean_pop_min_seed": 19315,
+        "mean_pop_max_seed": 24993,
+        "crime_mean": 87.3,
+        "road_tiles_end": 140
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 75,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 20260,
+        "mean_pop_min_seed": 14370,
+        "mean_pop_max_seed": 23628,
+        "crime_mean": 97.2,
+        "road_tiles_end": 201
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 75,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 21846,
+        "mean_pop_min_seed": 19310,
+        "mean_pop_max_seed": 23695,
+        "crime_mean": 98.9,
+        "road_tiles_end": 206
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 22721,
+        "mean_pop_min_seed": 20923,
+        "mean_pop_max_seed": 24620,
+        "crime_mean": 87.5,
+        "road_tiles_end": 200
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 75,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 20787,
+        "mean_pop_min_seed": 19526,
+        "mean_pop_max_seed": 22798,
+        "crime_mean": 89.4,
+        "road_tiles_end": 173
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 100,
+        "police_funding": 50,
+        "fire_funding": 50,
+        "mean_pop": 12516,
+        "mean_pop_min_seed": 8827,
+        "mean_pop_max_seed": 17268,
+        "crime_mean": 94.4,
+        "road_tiles_end": 248
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 100,
+        "police_funding": 50,
+        "fire_funding": 100,
+        "mean_pop": 14029,
+        "mean_pop_min_seed": 9423,
+        "mean_pop_max_seed": 17652,
+        "crime_mean": 99.9,
+        "road_tiles_end": 243
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 100,
+        "police_funding": 100,
+        "fire_funding": 50,
+        "mean_pop": 14270,
+        "mean_pop_min_seed": 10098,
+        "mean_pop_max_seed": 17105,
+        "crime_mean": 91.9,
+        "road_tiles_end": 238
+      },
+      {
+        "road_spacing": 6,
+        "road_funding": 100,
+        "police_funding": 100,
+        "fire_funding": 100,
+        "mean_pop": 14306,
+        "mean_pop_min_seed": 10456,
+        "mean_pop_max_seed": 17105,
+        "crime_mean": 95.1,
+        "road_tiles_end": 228
+      }
+    ]
+  },
+  "past_runs": [
+    {
+      "digest": {
+        "run": "micropolis-20261011-034043-s1",
+        "seed": 1,
+        "years": 20,
+        "reviewer": "llm:claude-code/default",
+        "final_population": 1940.0,
+        "peak_population": 21100.0,
+        "peak_date": "1909-09",
+        "drop_after_peak_pct": 94.1,
+        "mean_population": 10638,
+        "months_build_stalled_for_money": 97,
+        "first_month_funds_below_1000": "1914-01",
+        "mean_tax_first_3_years": 5,
+        "mean_tax": 5.6,
+        "min_reserve": 600,
+        "max_builds_per_month": 2,
+        "land_use_used": [
+          "separated"
+        ],
+        "reviews": 25,
+        "prediction_hit_rate": 0.45,
+        "built": {
+          "residential": 39,
+          "commercial": 11,
+          "industrial": 13,
+          "police": 2,
+          "fire": 1
+        },
+        "mean_residential_share_target": 0.67
+      },
+      "reflection": {
+        "mistakes": [
+          "재정 붕괴가 핵심 실패다. 자금이 1903-01에 3584, 1907-01에 2342, 1909-01에 2111, 1914-01에 940, 1916-01에 301, 1917-01에 0까지 계속 줄었다. 12개월 인구 증가가 +1340으로 둔화된 1906-01에도 세율 5%와 3000 reserve를 유지했고, 현금흐름을 고치는 조치는 1907-01(-192)에야 시작됐다. 그 사이 현금흐름은 -344(1903-01), -192, -103, -128로 계속 적자였다.",
+          "reserve 3000을 쓰면서 자금이 그 아래로 떨어지자 건설이 멈췄다. 이 상태가 97개월 지속됐다(months_build_stalled_for_money 97). 1903-01 이후 자금은 reserve 부근 또는 아래였고, 1907~1909년 리뷰 3회 연속 '자금 < reserve라 건설 불가'라고 적었다. 즉 reserve가 건설 자체를 막았고, 같은 설정을 반복했다. 벤치마크 reserve 1000 설정도 이 구간에서는 현금이 부족해 건설이 막힌다. 다만 reserve 1000 설정은 평균 인구 12951, 최종 30208이다.",
+          "붕괴 후반에 세율 설정이 12개월을 넘기지 못하고 흔들렸다. 5→6→7(1909)→5(1911)→6(1912)→5(1915)→7(1917-11)→5(1918-11)→7(1919-11)로 계속 바뀌었다. 평균 세율 5.6은 벤치마크와 비슷해 보이지만, 세율 변경 효과를 분리해 볼 수 없었다. 7% 구간(1909~1910) 뒤 1911-01 인구 12개월 -1180이었으나, 세율 때문인지는 가설: 이 데이터만으로 확정할 수 없다.",
+          "인구가 21100(1909-09)에서 1940으로 94.1% 급락했다. 최종 인구 1940은 벤치마크 최종 평균 14732~30208에 크게 못 미친다. 1913-01에는 res -2000, com -1500, ind -1500으로 세 수요 밸브가 모두 음수였고 12개월 인구는 -3480이었다. 그런데 '수요 없음이므로 건설 불필요'로 판단했을 뿐 원인(예: 세금 부담, 서비스 부족, 전력·교통, 화재·재해)을 조사하지 않았다. 원인은 가설: 데이터에 없다.",
+          "소방·경찰 투자가 매우 부족했다. 인구 21100 도시에 police 2, fire 1만 지었다. 서비스 부족이 인구 감소와 재정 악화에 기여했는지는 가설: 이 로그에서 확인되지 않는다. 하지만 서비스 시설 유지비와 도시 규모의 균형을 점검한 기록이 리뷰에 없다.",
+          "예측 적중률이 0.45로 낮았고, 1907~1914년 점수는 0.0~0.4로 대부분 낮았다. 낮은 점수에도 같은 규칙('자금<reserve면 reserve 유지', '성장 중이면 5% 유지')을 반복했다. 1917-01~1919-11에는 자금 0, cash_flow -394/-383/-436인데 builds 0만 유지하는 것으로는 회복되지 않는다는 점을 1918-11에서야 인정했다. 실제로 12개월 자금 변화는 +0이었다. 건설이 이미 0인데도 적자가 계속된 점은, 지출 원인이 건설이 아니라 유지비나 세수 감소일 수 있음을 시사한다(가설)."
+        ],
+        "worked": [
+          "초기 성장은 양호했다. 인구는 1900-12 180, 1901-05 1160, 1901-10 3120, 1902-03 5020, 1904-01 11140, 1905-01 15840, 1906-01 17180이고 정점은 1909-09의 21100이다. 정점은 벤치마크 평균 peak 23130에 근접하고 reserve 3000 벤치마크와 비슷한 수준이다. 세율 5%와 residential share 약 0.67(벤치마크 0.7 근처)로 초기 성장은 유효했다.",
+          "1900-01에 전력을 먼저 확보한 판단은 효과가 있었다. 1900-07 발전소 1기로 zone 10개가 전력을 공급받았고, 이후 인구가 증가했다. 이 선택은 초기 성장의 전제로 작용한 것으로 보인다.",
+          "1902-03부터 월 건설 수를 1로 줄이고 재정을 먼저 보는 판단은 방향은 맞았지만 너무 약했다. 1903-01에 현금이 3584이고 12개월 자금 변화가 -5254였으므로 이 시점의 신호는 정확했다. 그러나 이후 대응(세율·서비스·지출 조정)이 늦었다. 이 신호를 읽은 것 자체는 유용했다."
+        ],
+        "rules_for_next_time": [
+          "재정 경보 규칙: 12개월 자금 변화가 음수이고 자금이 reserve의 1.5배 미만이면, 인구가 성장 중이어도 즉시 대응한다. 이후 3개월 연속 cash_flow가 음수면 세율을 5→6으로 올리고, 건설은 월 1건 이하로 제한한다. 자금 변화가 0 이상이 된 뒤에만 건설을 늘린다. 판단은 12개월마다 하지 않고 분기마다 점검한다.",
+          "reserve는 3000 고정을 피한다. 벤치마크에서 reserve 3000과 builds 2는 mean_pop 14306으로 가장 높았지만, 최종 평균은 14732이고 reserve 1000, builds 4는 최종 30208이었다. 이번 실행은 reserve 3000이 건설 정지 97개월과 같이 나타났다. 자금이 reserve의 80% 아래로 내려가면 reserve를 1000~1500으로 낮추는 대신 지출 원인을 먼저 확인한다. 이 규칙은 1회 실행 근거라서 가설: 일반화는 추가 시드가 필요하다.",
+          "자금이 1000 아래로 내려가면 '건설 0'으로 가지 않고 즉시 세율을 6~7로 올리고, 최소 12개월 유지한다. 이전의 잦은 5↔7 변경을 금지한다. 1917-11~1919-11처럼 자금 0, cash_flow -400 상태에서 12개월 이상 같은 조치를 반복하지 않고, 변경 후 6개월 지나도 cash_flow가 개선되지 않으면 다른 원인(서비스 유지비 등)을 점검한다.",
+          "수요 밸브 세 개가 모두 음수이면(1913-01 기준 res -2000, com -1500, ind -1500) 단순 대기가 아니라 원인 점검 체크리스트를 실행한다: 전력 공급 zone 비율, police/fire 수, 세율, 현금. 인구 12개월 변화가 -1000 이하이면 이 점검을 필수로 한다.",
+          "인구 정점 후 하락을 조기에 감지한다. 정점 대비 인구가 10% 이상 떨어지면(예: 21100→18990) 다음 리뷰를 기다리지 말고 전략을 바꾼다. 이번 실행은 1909-09 정점 이후 1910-01에도 같은 설정이었고, 1911-01에야 세율을 되돌렸다.",
+          "예측 점수가 두 번 연속 0.4 이하이면 같은 규칙을 반복하지 않고 다른 노브를 하나만 바꾼다. 이번 실행은 1907~1919 구간에서 이 신호를 무시했다."
+        ],
+        "open_questions": [
+          "가설: 인구 급락(21100→1940)의 주된 원인은 재정 고갈로 인한 서비스·유지 부족일 수 있다. 검증: 같은 시드에서 1909년 시점에 자금을 5000 이상 확보한 대조 실행과 비교하고, 건설 정지 구간의 지출 내역을 로그로 분리해 확인한다.",
+          "가설: 세율 7%는 인구 이탈을 가속했을 수 있다. 1909~1910 구간에서 7%였고 1911-01 인구 12개월 -1180이었지만, 다른 요인과 분리되지 않았다. 검증: 같은 시드에서 세율만 5/6/7로 바꿔 12개월씩 비교한다.",
+          "가설: police 2, fire 1은 도시 규모에 비해 부족했을 수 있다. 검증: 인구 10000 이상에서 서비스 시설 비율을 달리한 실행 간에 화재·범죄·인구 변화를 비교한다.",
+          "reserve 1000에 builds 4 설정은 최종 평균 30208로 높지만 mean_pop 12951로 낮다(가설: 후반 성장이 크다). reserve 3000에 builds 2는 반대로 mean_pop 14306, 최종 14732이다. 이번 시드 1에서 어느 쪽이 맞았을지는 알 수 없다. 검증: 시드 1에서 두 설정을 모두 실행한다.",
+          "자금이 0이고 건설도 0인 상태(1917~1919)에서 cash_flow가 -383~-436으로 유지된 이유는 이 로그로 알 수 없다. 검증: 세입과 지출 항목(도로·전력·서비스 유지비)을 월별로 기록해 어느 항목이 적자를 만드는지 확인한다."
+        ],
+        "by": "claude-sonnet-5-5",
+        "usage": {
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 7234,
+          "output_tokens": 3413,
+          "latency_s": 31.15,
+          "cost_usd": 0.057672
+        }
+      }
+    },
+    {
+      "digest": {
+        "run": "micropolis-20261011-034043-s2",
+        "seed": 2,
+        "years": 20,
+        "reviewer": "llm:claude-code/default",
+        "final_population": 15360.0,
+        "peak_population": 20360.0,
+        "peak_date": "1908-09",
+        "drop_after_peak_pct": 90.8,
+        "mean_population": 10555,
+        "months_build_stalled_for_money": 125,
+        "first_month_funds_below_1000": "1913-01",
+        "mean_tax_first_3_years": 5,
+        "mean_tax": 5.7,
+        "min_reserve": 500,
+        "max_builds_per_month": 2,
+        "land_use_used": [
+          "separated"
+        ],
+        "reviews": 25,
+        "prediction_hit_rate": 0.47,
+        "built": {
+          "residential": 42,
+          "commercial": 11,
+          "industrial": 12,
+          "police": 2,
+          "fire": 1
+        },
+        "mean_residential_share_target": 0.69
+      },
+      "reflection": {
+        "mistakes": [
+          "재정 붕괴가 가장 큰 실패였다. 최고 인구 20,360(1908-09) 이후 90.8% 하락했고, 건설 정체가 125개월이었다. 자금이 1913-01에 1,000 아래로 내려간 뒤 1916-03~1917-03에는 0까지 떨어졌다. 최종 인구 15,360은 회복 결과이지만, 평균 인구 10,555는 벤치마크 reserve 3000/builds 2 전략의 평균 14,306보다 낮다.",
+          "reserve 3000을 고정한 채 자금이 그 아래로 내려가도록 방치했다. 1907-01 자금은 2,314, cash_flow는 -183이었다. 이때부터 reserve 미만이라 건설이 멈췄는데도 이후 여러 해 동안 같은 규칙('먼저 cash_flow를 0 이상으로')만 반복했다. 1907~1913년 cash_flow는 -183, -195, -204, -162, -253으로 계속 적자였고 자금은 2,314에서 795로 줄었다. 실제 개선 조치는 늦었다.",
+          "세율 대응이 늦고 일관성이 없었다. 첫 3년은 5%였으나 적자 이후 1908에 6%, 1909에 8%, 1910에 6%, 1911에 5%, 1915에 7%, 1915-11에 5%, 1917에 7%, 1919에 8%로 계속 바뀌었다. 8%를 올린 뒤 인구는 12개월 -1,820, 이후 -2,600으로 감소했다. 세율 상승이 인구 감소의 원인이라고 단정할 수는 없다(가설:). 그러나 수입 회복에도 성공하지 못했다. 1915 세율 7% 실험은 cash_flow -337로 +200 개선 기준에 못 미쳤다.",
+          "인구 감소 국면에서 건설 규칙이 맞지 않았다. 1911-01에 res_valve -2000, com_valve -676, ind_valve -1500으로 수요가 모두 음수였는데도 reserve와 세율 조정에 머물렀다. 수요 음수의 원인(전력, 교통, 오염, 범죄, 주거와 일자리 불균형 등)은 로그에 없다(가설:). 건설 내역은 주거 42, 상업 11, 산업 12, 경찰 2, 소방 1이다. 서비스 시설은 적고 주거 비중(목표 평균 0.69)이 높아 상업·산업 기반이 약했을 수 있다(가설:).",
+          "건설 속도 결정이 불안정했다. 1902-03부터 builds를 1로 낮췄고, 벤치마크에서 reserve 1000/builds 4/세율 5% 전략은 final_mean 30,208로 가장 좋았다. 이 설정은 이번 run에서 시험하지 않았다. 빠른 성장기(1902~1904, 12개월 +4,000대)에 builds를 낮춰 성장을 늦췄을 가능성이 있다(가설:).",
+          "예측 정확도가 낮았다. 예측 적중률은 0.47이고 대부분의 점수는 0.2~0.6이었다. 1907~1914년 재정과 인구 하락기에는 0.2~0.4가 많았다. 즉 하락 국면의 원인 모델이 틀렸다.",
+          "1919-03에 주거 수요가 0으로 고정되는 엔진 규칙(res_pop 521 > 500이고 stadium 0)을 뒤늦게 발견했다. 이 규칙은 1900년대 초부터 병목이었을 가능성이 있으나 이를 뒷받침할 로그는 없다(가설:)."
+        ],
+        "worked": [
+          "초기 5% 세율과 reserve 3000 전략은 성장에 효과적이었다. 인구가 1900-12 680, 1901-10 2,940, 1903-01 8,560, 1904-01 12,920, 1906-01 16,000으로 올랐고, 최고 20,360(1908-09)에 도달했다. 이는 벤치마크 5% 세율의 peak_mean 23,130에 근접한 수준이다.",
+          "1900~1906년에는 12개월 성장 중이면 5%를 유지하는 규칙이 효과가 있었다. 이 기간 인구는 12개월 +1,340에서 +4,880까지 올랐다.",
+          "1917~1918년에 회복이 이뤄졌다. 1918-03 인구는 10,380, 12개월 +7,000, 3개월 +2,300이었다. 최종 인구 15,360은 바닥 근처(1914-01 5,920)보다 크게 높다. 회복 원인은 로그만으로 확정하기 어렵다(가설: 세율 7% 유지와 건설 재개).",
+          "1919-03에 res_pop 521 > 500 & stadium 0이라는 엔진 제약을 발견하고 stadium(5000) 필요성을 진단한 것은 병목을 구조적으로 이해한 좋은 진전이었다. 이 리뷰의 예측 점수는 0.8로 가장 높았다.",
+          "세율을 낮출 때 한 번에 5%로 내리지 않고 6%를 거친 것(1910-01)과, 7% 실험이 실패하자 12개월 뒤 5%로 되돌린 것(1915-11)은 가설을 검증하고 되돌리는 방식으로 적절했다."
+        ],
+        "rules_for_next_time": [
+          "초기(~1906)에는 세율 5%를 유지하고, 12개월 인구 변화가 양수인 동안 세율을 바꾸지 않는다. 변경이 필요하면 최소 12개월 유지한다.",
+          "자금이 reserve의 1.5배 미만으로 내려가고 cash_flow가 2개월 연속 음수이면, 3개월을 기다리지 말고 즉시 대응한다. 대응은 (a) 신규 구역 건설 중단, (b) 도로·전력 등 유지비 점검, (c) 세율 1%p 인상이다. 이후 자금이 reserve 1.2배를 회복하면 되돌린다.",
+          "reserve는 3000 고정이 아니라 1000~1500으로 시작하고 builds를 3~4로 올려 성장기 건설을 가속한다. 벤치마크에서 reserve 1000/builds 4/세율 5%가 final_mean 30,208로 최고였다. 단 mean_pop은 12,951로 reserve 3000 전략(14,306)보다 낮으므로, 최종값과 평균 중 무엇을 목표로 할지 먼저 정한다.",
+          "자금이 reserve 아래로 내려가 건설이 막힌 달수가 12개월 중 6개월을 넘으면 reserve를 reserve의 절반으로 낮추거나 세율을 올려 둘 중 하나를 반드시 실행한다. 같은 설정으로 12개월 이상 정체를 유지하지 않는다.",
+          "세율 인상 실험은 한 번에 1%p씩, 12개월 단위로만 한다. 판정 기준은 cash_flow +200 이상 개선과 12개월 인구 감소가 -5% 이내인 것이다. 둘 중 하나라도 실패하면 직전 세율로 복귀한다. 이번 run의 8% 인상 이후 인구는 12개월 -1,820, 이후 -2,600이었다.",
+          "인구가 12,000을 넘기 전에 경찰과 소방 시설을 확보하고 res_pop 500 부근에서 stadium 필요 여부를 점검한다. 엔진 규칙(res_pop > 500 & stadium 0이면 주거 수요 0)이 맞다면 stadium(5000) 비용을 reserve와 별도로 미리 적립한다. 이번 run은 이 규칙을 1919-03에야 확인했다.",
+          "res_valve, com_valve, ind_valve가 3개 모두 음수이면 신규 구역을 짓지 않는다. 대신 음수의 원인(전력, 교통, 범죄, 오염, 세율)을 하나씩 확인한다. 한 번에 한 노브만 바꾼다.",
+          "residential_share는 0.6~0.7 범위에서 시작하고, com_valve나 ind_valve가 res_valve보다 -500 이상 낮으면 상업·산업 비중을 높인다. 이 비중의 효과는 이번 run에서 검증되지 않았다(가설:)."
+        ],
+        "open_questions": [
+          "1907~1909년 cash_flow가 음수로 바뀐 직접 원인은 무엇인가? 건물 증가에 따른 유지비, 서비스 시설 비용, 세수 감소 중 무엇인지 월별 수입·지출 항목을 로그로 남겨 확인한다.",
+          "최고 인구(1908-09) 이후 90.8% 하락은 재정 부족으로 건설이 멈춘 탓인가, 세율 8% 때문인가, 수요(valve) 붕괴 때문인가? 같은 seed 2에서 1907-01 시점에 세율 5% 유지, 세율 6%, reserve 하향 중 하나만 바꿔 반복 실행해 비교한다.",
+          "reserve 1000/builds 4/세율 5% 전략이 seed 2에서도 final_mean 30,208 수준을 낼 수 있는가? 벤치마크는 seed 9~16 평균이므로 seed 2에서 직접 실행해 확인한다(가설:).",
+          "stadium을 초기에 지으면 res_pop 500 제한이 풀려 1904~1908 성장이 더 이어지는가? res_pop 500 도달 전후 stadium 유무로 두 번 실행해 비교한다.",
+          "1917~1918년 회복(12개월 +7,000)의 원인은 무엇인가? 세율 7%, 건설 재개, 자금 0에서의 지출 구조 변화 중 어느 것인가? 해당 기간의 지출·수입 상세와 건설 이벤트를 분리해 확인한다.",
+          "세율 5%와 7%의 장기 비교에서 벤치마크 상 5%/builds 2/reserve 1000의 final_mean(20,358 아님, 0.6 share 기준)과 7%/builds 2의 final_mean 21,960처럼 평균과 최종값이 엇갈리는데, 이 차이는 seed 편차인가 구조적 차이인가? seed를 늘려 반복 측정한다."
+        ],
+        "by": "claude-sonnet-5-5",
+        "usage": {
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 7365,
+          "output_tokens": 3642,
+          "latency_s": 32.87,
+          "cost_usd": 0.060486
+        }
+      }
+    },
+    {
+      "digest": {
+        "run": "micropolis-20261011-034043-s3",
+        "seed": 3,
+        "years": 20,
+        "reviewer": "llm:claude-code/default",
+        "final_population": 1400.0,
+        "peak_population": 21200.0,
+        "peak_date": "1911-04",
+        "drop_after_peak_pct": 93.4,
+        "mean_population": 11289,
+        "months_build_stalled_for_money": 142,
+        "first_month_funds_below_1000": "1910-01",
+        "mean_tax_first_3_years": 5,
+        "mean_tax": 5.7,
+        "min_reserve": 2000,
+        "max_builds_per_month": 2,
+        "land_use_used": [
+          "separated"
+        ],
+        "reviews": 24,
+        "prediction_hit_rate": 0.35,
+        "built": {
+          "residential": 39,
+          "commercial": 6,
+          "industrial": 12,
+          "police": 2,
+          "fire": 2
+        },
+        "mean_residential_share_target": 0.68
+      },
+      "reflection": {
+        "mistakes": [
+          "재정 붕괴를 너무 늦게 대응했다. 1905-01에 인구 13620으로 성장 중이었지만 1906-01에 자금 1957, cash_flow -348로 이미 reserve 3000 아래였다. 이후 자금은 1712(1907) → 1362(1908) → 1144(1909) → 870(1910) → 648(1911) → 430(1912) → 155(1913) → 0(1914)으로 8년 동안 단조 감소했고, 1914-01부터 1919-01까지 자금은 0~5에 머물렀다. 월 142개월 동안 자금 부족으로 건설이 멈췄다.",
+          "reserve 3000을 고정한 채 유지한 것이 결정적 실수다. 자금이 3000 미만으로 떨어진 뒤(1906-01~) 매 리뷰에서 '규칙상 reserve를 낮추지 않는다'고 반복했는데, 자금이 reserve보다 낮으면 executor가 아무것도 짓지 않는다. 즉 1906년 이후 사실상 건설 0건 상태가 14년 가까이 이어졌다. 벤치마크에서 reserve 1000인 전략은 final_mean 20358~30208로 reserve 3000 전략(14732)보다 최종 인구가 높았다.",
+          "세율을 5↔7 사이에서 매년 번갈아 바꿨다. 1911(7)→1912(5)→1913(7)→1914(5)→1915(7)→1916(5)→1917(7)→1918(5)→1919(7). 이전에 스스로 세운 '변경 후 최소 12개월 유지' 규칙은 지켰지만 방향이 일관되지 않았고, 효과를 측정할 만큼 길게 한 방향으로 가지 않았다. cash_flow는 -218 ~ -494로 계속 적자였고 악화(1919: -494)됐다. 세율 6~7로 올린 해에도 적자가 해소되지 않았다.",
+          "재정 적자의 원인을 진단하지 않았다. 로그에는 지출 항목(경찰 2, 소방 2, 도로·발전소 유지비 등)과 수입 내역이 없고, 건설도 못 하는 상태에서 cash_flow가 계속 음수였다는 사실만 있다. 가설: 도로/전력/치안·소방 유지비가 세수보다 커졌고, 인구가 줄면서(13760 → 3620 → 1400) 세수가 더 줄어 악순환이 생겼다. 이 가설은 지출 내역이 없어 검증하지 못했다.",
+          "성장기에 상업을 너무 적게 지었다. 건설 수는 주거 39, 산업 12, 상업 6이었고 주거 목표 비중 평균은 0.68이었다. 초기 com_valve가 -1500이어서 상업을 안 지은 것은 타당했지만, 이후 상업 수요가 회복됐는지 확인하는 리뷰가 없다. 가설: 상업 부족이 세수 기반을 약하게 해 이후 적자에 기여했다.",
+          "초기 성장기 건설 속도를 1902-03부터 월 1건으로 줄였다. 이때 인구 3680으로 성장 중이었지만 12개월 +2700, +4040, +5240 증가가 이어지던 시기였다. 벤치마크에서 월 4건·reserve 1000인 전략은 final_mean 30208로 가장 높았고, 월 2건·reserve 1000(세율 5, 비중 0.6)도 20358이었다. 이 비교는 시드가 다르고 변수 여러 개가 동시에 달라서 인과로 단정하기는 어렵다.",
+          "예측 정확도가 낮았다. prediction_hit_rate 0.35였고, 위기 구간(1912~1919)의 prev score는 0.0~0.4였다. 실패하는 예측을 반복하면서도 같은 논리('cash_flow를 먼저 0 이상으로')를 24회 리뷰 동안 되풀이했다.",
+          "결과: 최고 인구 21200(1911-04) 대비 최종 1400으로 93.4% 하락했다. mean_population 11289는 벤치마크 reserve 3000 전략의 14306보다 낮고, 최종 인구는 벤치마크 최솟값 수준에도 크게 못 미친다. 다만 벤치마크는 다른 시드라 시드 3 자체의 난이도 차이는 배제할 수 없다."
+        ],
+        "worked": [
+          "초기 성장은 좋았다. 세율 5%, reserve 2000~3000, 월 2건으로 시작해 인구가 1900-12 380, 1901-05 1540, 1902-08 6080, 1903-01 8100, 1904-01 11100, 1905-01 13620으로 증가했다. 최고 인구 21200(1911-04)은 벤치마크 reserve 3000 전략의 peak_mean 23130과 비슷한 수준이다.",
+          "초기에 com_valve가 -1500일 때 상업을 억제하고 주거와 산업(res_valve 2000, ind_valve 1500)에 집중한 판단은 수치와 일치했고 인구 증가로 이어졌다. 1900-12~1901-10 예측 점수도 0.6~0.8로 높았다.",
+          "세율 5%는 성장기에 유효해 보였다. 벤치마크에서도 세율 5% 전략들이 mean_pop 11941~14306으로 세율 7% 전략들(11867, 12137)보다 대체로 높았다. 다만 차이가 작아 세율 단독 효과로 단정하기는 어렵다.",
+          "min_reserve 2000, 경찰 2 및 소방 2 설치로 초기 안정성은 확보했다. 그러나 이것이 이후 재정 붕괴를 막았다고 말할 근거는 없다."
+        ],
+        "rules_for_next_time": [
+          "reserve는 현재 자금 이하로 유지한다: 자금이 reserve 미만인 상태가 3개월 연속이면 reserve를 1000 이하로 낮추고, 건설은 최소 월 1건이 실제로 실행되는지 확인한다. 검증 기준: 다음 6개월 동안 built 건수 증가 여부.",
+          "기본 시작값은 reserve 1000, 월 건설 2~4건, 세율 5%, 주거 비중 0.7로 한다. 근거: 벤치마크에서 reserve 1000·월 4건·세율 5% 전략이 final_mean 30208, reserve 3000·월 2건 전략은 14732였다.",
+          "cash_flow가 2개 리뷰 연속 음수이고 자금이 reserve의 50% 미만이면 새 구역 건설을 중단하고 지출 원인을 먼저 본다. 이때 세율 변경은 한 방향으로만 하고, 최소 24개월 동안 같은 방향을 유지한다. 5↔7 교대는 금지한다.",
+          "자금이 3000 이하로 떨어지기 전(예: 자금 < 5000 또는 12개월 자금 변화 < 0)에 선제적으로 건설 속도를 줄이고 세율을 1%p 올린다. 1905-01 시점(자금 정보 없음, 1906-01에 1957)에서 이미 늦었다.",
+          "성장 중에는 건설 속도를 낮추지 않는다. 12개월 인구 증가가 +2000 이상이면 월 건설 수를 2 이상으로 유지한다. 1902-03에 월 1건으로 낮춘 결정은 되풀이하지 않는다.",
+          "리뷰마다 com_valve를 확인해 양수가 되면 상업 비중을 올린다. 상업 건설이 12년 동안 6채뿐이었으므로 주거:상업:산업 비중을 로그에서 점검한다.",
+          "인구가 12개월 -2000 이상 감소하면 같은 규칙을 반복하지 말고 다른 노브(reserve, 건설 수, 서비스 시설 수)를 하나 바꿔 비교한다. 같은 설정이 3회 연속 prev score 0.2 이하이면 설정을 바꾼다."
+        ],
+        "open_questions": [
+          "1906~1914년 적자의 주원인은 무엇인가? 테스트: 재정 보고서에서 수입(세수)과 지출(도로, 경찰, 소방 유지비)을 분리해 기록하고, 같은 시드에서 서비스 시설 수를 바꿔 비교한다.",
+          "reserve 1000과 3000이 같은 시드에서 최종 인구에 어느 정도 차이를 만드는가? 테스트: 시드 3에서 reserve만 바꿔 재실행한다.",
+          "인구 21200 이후 감소가 재정 때문인가 아니면 다른 원인(오염, 범죄, 교통, 전력, 화재) 때문인가? 테스트: 1911-04 전후의 범죄율, 오염, 전력 상태, 재난 이벤트 로그를 기록한다. 현재 로그에는 없으므로 가설이다.",
+          "세율 6~7%가 5%보다 장기 현금흐름을 개선하는가? 벤치마크에서는 세율 7%의 mean_pop_min_seed가 5791로 더 낮은 경우도 있다. 테스트: 동일 시드에서 세율 5, 6, 7을 각각 36개월 이상 고정하여 비교한다.",
+          "건설이 멈춘 상태에서 도시가 어떻게 자금을 회복할 수 있는가? 가설: 일부 구역 철거나 서비스 시설 비용 축소가 필요할 수 있으나 로그에 근거가 없다. 테스트: 위기 시 시설 철거/축소 노브가 가능한지 확인하고 시뮬레이션한다."
+        ],
+        "by": "claude-sonnet-5-5",
+        "usage": {
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 7221,
+          "output_tokens": 3409,
+          "latency_s": 31.25,
+          "cost_usd": 0.05758
+        }
+      }
+    },
+    {
+      "digest": {
+        "run": "micropolis-20261011-034043-s4",
+        "seed": 4,
+        "years": 20,
+        "reviewer": "llm:claude-code/default",
+        "final_population": 2080.0,
+        "peak_population": 19860.0,
+        "peak_date": "1910-02",
+        "drop_after_peak_pct": 89.5,
+        "mean_population": 10469,
+        "months_build_stalled_for_money": 109,
+        "first_month_funds_below_1000": "1912-01",
+        "mean_tax_first_3_years": 5,
+        "mean_tax": 5.5,
+        "min_reserve": 1000,
+        "max_builds_per_month": 2,
+        "land_use_used": [
+          "separated"
+        ],
+        "reviews": 25,
+        "prediction_hit_rate": 0.36,
+        "built": {
+          "residential": 43,
+          "commercial": 11,
+          "industrial": 12,
+          "police": 2,
+          "fire": 1
+        },
+        "mean_residential_share_target": 0.65
+      },
+      "reflection": {
+        "mistakes": [
+          "재정 붕괴가 핵심 실패다. 1903-01에 자금이 3636으로 reserve 3000을 간신히 넘었고 cash_flow는 -311이었다. 그 뒤 1906~1908에 자금이 2581→2337→2100으로 줄었고 1912-01 이후 1000 아래로 떨어져 1917~1919에는 자금 0이 됐다. 109개월 동안 건설이 돈 때문에 멈췄다. 가설: 인구가 15000명대로 커지면서 도로·경찰·소방 유지비가 늘었는데 세수가 따라가지 못했다.",
+          "reserve 3000을 고수한 것이 역효과였다. 1906-01부터 자금이 reserve 아래였고 규칙상 건설이 멈췄지만 cash_flow는 계속 -160~-250이었다. 건설을 멈춰도 적자가 고쳐지지 않았으니 '멈추고 회복을 기다린다'는 규칙은 틀렸다. 1914-01(566)에서는 reserve를 오히려 3000으로 올렸고 건설 정지 상태만 길어졌다.",
+          "세율과 reserve를 자주 바꿨다. 1909에 6%, 1910에 7%, 1911에 5%, 1914에 5%, 1915에 7%, 1916에 5%, 1917에 7%, 1919에 5%로 오갔다. 12개월 유지 규칙을 스스로 어겼고 어떤 세율이 효과가 있는지 판단할 수 없게 됐다. 7%를 1년 유지한 1910~1911에도 cash_flow는 -167에서 -49로 약간만 개선됐다.",
+          "인구가 정점 19860(1910-02)에서 최종 2080으로 89.5% 줄었다. 1911-05에 상업·산업 밸브는 1500으로 최대였고 주거 밸브는 41이었다. 그런데 1911~1912까지 주거 중심 배분을 유지했고 주거 비중을 0.5로 바꾼 뒤에도 건설 자금이 없어서 실행되지 않았다. 가설: 인구 감소의 원인은 일자리 부족과 재정난으로 인한 서비스·건설 정지의 결합일 것이다. 이 인과는 로그만으로 확정할 수 없다.",
+          "건설 구성이 편중됐고 치안·소방이 부족했다. 주거 43, 상업 11, 산업 12에 경찰 2, 소방 1뿐이다. 인구 약 2만 규모에는 서비스 시설이 현저히 적다. 가설: 범죄와 화재, 서비스 부족이 인구 감소와 세수 감소를 키웠을 수 있다.",
+          "초기 성장 후 건설 속도를 너무 일찍 줄였다. 1902-03에 월 건설을 2→1로 낮췄다. 벤치마크에서 reserve 1000, 월 4건, 세율 5%는 최종 평균 인구 30208로 가장 좋았다. 나는 월 1~2건을 유지해 이 구성에 한참 못 미쳤다. 평균 인구 10469도 벤치마크 최저 구성(11867)보다 낮다.",
+          "예측 적중률이 0.36으로 낮고, 같은 이유를 매번 되풀이했다. 1909~1919 리뷰 대부분이 '자금이 reserve보다 낮아서 건설이 멈췄다'로 시작한다. 새로운 가설을 시험하지 않았다. 1912-01과 1913-01에 존 인구(res_pop 345, 228)가 총인구와 크게 달랐는데도 원인을 조사하지 않고 가정만 적었다."
+        ],
+        "worked": [
+          "초기 5% 세율과 주거·산업 중심 개발이 빠른 성장을 냈다. 인구가 1900-12에 640, 1901-10에 2680, 1904-01에 11700, 1905-01에 15160, 1910-02에 정점 19860이 됐다. 12개월 증가량은 1902-08에 +4260으로 가장 컸다.",
+          "초기에 수요 밸브를 읽고 건설 종류를 정했다. 1900-07에 com_valve가 -1500이어서 상업을 미뤘고, 이후 주거·산업이 먼저 늘었다. 1911-05에도 같은 방식으로 상업·산업 밸브 1500을 읽고 주거 비중을 낮췄다. 다만 이 두 번째 조정은 자금이 없어 효과를 보지 못했다.",
+          "5% 세율 자체는 벤치마크와 일치했다. 5% 세율 구성이 7% 구성보다 평균 인구와 최종 인구가 높았다(예: 5%·월 4건 final_mean 30208, 7%·월 4건 22535). 7%를 시도한 뒤 12개월 평가로 5%로 되돌린 판단(1911-01)은 데이터와 맞는다.",
+          "1919-01 예측 점수는 0.8이었다. 자금 0 상태에서 건설이 멈추고 적자 해소가 우선이라는 판단은 단기적으로는 맞았다."
+        ],
+        "rules_for_next_time": [
+          "세율은 5%로 시작해 고정한다. 자금이 reserve 아래로 내려가고 cash_flow가 2개 리뷰 연속 음수일 때만 6~7%로 올린다. 올린 뒤에는 반드시 12개월 유지하고, 그 기간에 cash_flow가 +200 이상 개선되지 않으면 5%로 돌아간다. 12개월 안에는 변경하지 않는다.",
+          "reserve는 1000으로 고정하고 3000으로 올리지 않는다. 벤치마크에서 reserve 1000·월 4건·세율 5%의 final_mean이 30208로 가장 높았기 때문이다. reserve를 올려서 건설을 막는 선택은 하지 않는다.",
+          "월 건설 수는 초기 인구 5000명 전까지 4건으로 둔다. 자금이 2000 아래면 2건으로 줄이고 1000 아래면 0건으로 한다. 자금이 3000을 넘으면 4건으로 복귀한다. 이 기준은 숫자로 확인 가능하다.",
+          "cash_flow가 음수로 바뀌는 첫 리뷰에서 바로 대응한다. 자금이 reserve의 2배 아래이고 cash_flow < 0이면, 신규 주거 건설을 줄이고 세수를 만드는 상업·산업 건설을 우선하며 필요 시 세율을 올린다. 자금이 0이 될 때까지 기다리지 않는다.",
+          "인구 5000명당 경찰서 1개와 소방서 1개를 최소 기준으로 둔다(현재 기록은 인구 약 2만에 경찰 2, 소방 1). 이 기준이 효과가 있는지는 가설이므로, 지킨 상태에서 인구 12개월 변화로 확인한다.",
+          "주거·상업·산업 비중은 매 리뷰에서 밸브가 가장 높은 유형 쪽으로 옮긴다. 주거 밸브가 100 미만이고 상업·산업 밸브가 1000 이상이면 주거 비중을 0.5 이하로 낮춘다. 단, 자금이 reserve 이상일 때만 실행되므로 자금 확인을 먼저 한다.",
+          "인구가 정점의 20% 이상 줄면(12개월 기준) 같은 리뷰에서 새 가설 하나와 확인 지표를 적는다. '건설 정지, 회복 대기'만 반복하지 않는다."
+        ],
+        "open_questions": [
+          "인구가 1910-02 이후 급감한 정확한 원인은 무엇인가? 재정(자금 1937→0)인지, 일자리 부족인지, 범죄·화재 같은 서비스 문제인지 알 수 없다. 다음 실행에서 같은 시점의 범죄율, 오염, 교통 지표를 기록하고 하나씩 바꿔 비교하면 된다.",
+          "가설: 월 4건 건설이 reserve 1000에서도 재정을 무너뜨리지 않는다. 벤치마크는 그렇게 보이지만 내 도시에서는 확인하지 못했다. 같은 seed로 월 2건과 4건을 비교하는 실험이 필요하다.",
+          "res_pop 345, com_pop 19, ind_pop 45 같은 존 인구와 총인구 17140의 큰 차이는 무엇을 뜻하는가? 지표 정의가 다를 수 있다. 같은 달에 다른 지표들을 함께 기록해 어느 값이 실제 인구와 맞는지 확인해야 한다.",
+          "7% 세율이 재정에 도움이 됐는지 불분명하다. 1910~1911에 cash_flow가 -167→-49로 개선됐지만 이는 인구 감소로 지출이 줄어든 효과일 수 있다. 같은 인구 규모에서 5%와 7%를 비교해야 한다.",
+          "벤치마크 최고 구성(5%, 월 4건)의 peak_mean은 30485이고 final_mean은 30208로 거의 같다. 이 구성은 seed 9~16에서만 측정됐다. seed 4에서 같은 결과가 나오는지는 직접 실행해야 알 수 있다."
+        ],
+        "by": "claude-sonnet-5-5",
+        "usage": {
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 7475,
+          "output_tokens": 3273,
+          "latency_s": 30.84,
+          "cost_usd": 0.057236
+        }
+      }
+    },
+    {
+      "digest": {
+        "run": "micropolis-20261011-034043-s5",
+        "seed": 5,
+        "years": 20,
+        "reviewer": "llm:claude-code/default",
+        "final_population": 13040.0,
+        "peak_population": 17480.0,
+        "peak_date": "1906-01",
+        "drop_after_peak_pct": 94.5,
+        "mean_population": 8556,
+        "months_build_stalled_for_money": 112,
+        "first_month_funds_below_1000": "1913-01",
+        "mean_tax_first_3_years": 5,
+        "mean_tax": 5.3,
+        "min_reserve": 3000,
+        "max_builds_per_month": 2,
+        "land_use_used": [
+          "separated"
+        ],
+        "reviews": 26,
+        "prediction_hit_rate": 0.45,
+        "built": {
+          "residential": 42,
+          "commercial": 6,
+          "industrial": 12,
+          "police": 2,
+          "fire": 1
+        },
+        "mean_residential_share_target": 0.68
+      },
+      "reflection": {
+        "mistakes": [
+          "reserve를 20년 내내 3000으로 고정한 것이 가장 큰 실수다. 1913-01에 자금이 1000 아래로 떨어진 뒤(680) 자금이 reserve보다 낮아 건설이 멈췄고, 건설 정체가 112개월이나 됐다. 20년(240개월) 중 약 47%다. 벤치마크에서 reserve 1000, 건설 4건/월(세율 5%)은 최종 평균 인구가 30208로, reserve 3000, 건설 2건/월의 14732보다 높았다.",
+          "1901-10부터 월 건설 상한을 1건으로 줄이고 끝까지 유지했다. 최종 지표의 max_builds_per_month는 2지만 실제 리뷰에서는 대부분 1이었다. 성장기(1902~1905)에 12개월 +2700~+5340 성장이 나오던 때 건설을 줄여 성장 여력을 스스로 깎았을 가능성이 있다(가설: 직접 비교 실험은 없다).",
+          "피크 인구 17480(1906-01) 이후 1909~1913에 인구가 8960에서 2440까지 무너졌다(피크 대비 -94.5%는 지표 기준이며, 리뷰 로그의 최저 2440은 약 -86%). 1906-06 자금 2579, cash_flow -184로 재정 악화 신호가 이미 있었는데, 경찰 2·소방 1 외에 재정 구조(유지비 대비 세수)를 점검하지 않았다. 원인은 로그만으로는 확정할 수 없다(가설: 도로·전력 등 유지비 증가, 또는 상업 6개로 세수 기반이 약함).",
+          "세율을 5%, 6%, 7%, 5%로 자주 바꿨다. 1906-06 6%, 1907-06 5%, 1908-06 6%, 1909-06 5%, 1912-06 7%, 1913-01 5%, 1913-12 7%, 1914-12 5%로, 12개월 유지 규칙도 1912-06~1913-01(7개월)과 1913-01~1913-12 구간에서 흔들렸다. 어떤 값도 cash_flow를 0 이상으로 돌리지 못했다(7% 유지 후 12개월 자금 -401, 인구 -580).",
+          "건설 구성이 편중됐다: 주거 42, 상업 6, 산업 12(합계 60). 목표 주거 비중은 평균 0.68이었고, 상업 수요가 음수인 시기가 길어(1900-07 com_valve -1500, 1911-06 세 밸브 모두 음수) 세수 기반이 확장되지 못했다. 밸브가 모두 음수였던 1910~1911에는 어떤 정책도 반응하지 못했다.",
+          "예측 적중률이 0.45로 낮았고, 하락기에는 대부분 점수가 0.2~0.4였다(1908-06, 1909-06, 1913-01, 1913-12, 1918-12 등 0.2). 자금 부족 상태에서도 같은 문구('reserve를 낮추지 않고 cash_flow를 먼저 개선')를 반복했고, 실제로 규칙을 바꾸는 시도는 하지 않았다.",
+          "1918-12~1919-12에 자금이 274, 416으로 다시 바닥이었고, 1917-12의 인구 16820에서 최종 13040으로 줄었다. 1913의 교훈(자금 고갈 → 정체)을 5년 뒤 같은 패턴으로 반복했다."
+        ],
+        "worked": [
+          "초반 세율 5% 유지와 빠른 확장이 효과적이었다. 인구가 1900-12에 380, 1901-05에 1600, 1902-08에 7260, 1906-01에 17480(피크)까지 올라갔다. 이는 벤치마크 평균 피크(23130, 5%/3000/2건)에 근접한다.",
+          "1915~1917 회복기에 5%를 유지해 인구가 4280(1915-12)에서 12760(1916-12), 16820(1917-12)으로 12개월 +8480, +4060 성장했다. 즉 한 번 자금이 바닥이어도 5%에서 회복이 가능했다는 근거가 있다.",
+          "평균 인구 8556은 벤치마크 최저(11867)보다 낮지만, 최종 인구 13040은 벤치마크 reserve 3000/2건 구성의 final_mean 14732에 가깝다. 초반 발전소 선건설과 주거·산업 우선 순서(res_valve 2000, ind_valve 1500)는 수요 신호에 맞았다.",
+          "상업 수요가 음수일 때(1900-07 com_valve -1500) 상업을 억지로 짓지 않은 판단은 수요 신호와 일치했다."
+        ],
+        "rules_for_next_time": [
+          "reserve는 1000으로 시작한다. 벤치마크에서 reserve 1000/5%/4건이 final_mean 30208로 최고였다. 단, mean_pop은 3000/2건(14306)이 더 높았으므로 평균 vs 최종 목표를 먼저 정한다.",
+          "자금이 reserve의 2배 미만으로 떨어지거나 cash_flow가 2개월 연속 음수면 즉시 월 건설 수를 줄인다. 반대로 자금 >= reserve + 3000이고 cash_flow >= 0이면 월 건설 수를 3~4로 올린다. 리뷰마다 이 수치를 로그에 적는다.",
+          "세율은 기본 5%로 고정하고, 변경은 자금 < 1000이면서 cash_flow < 0일 때만 한다. 변경하면 12개월 동안 건드리지 않는다. 12개월 뒤 cash_flow가 +200 이상 개선되지 않으면 원복한다.",
+          "자금이 1000 아래로 내려가는 달(first_month_funds_below_1000)을 가장 중요한 경보로 삼는다. 이번에는 1913-01이었다. 그 전 6개월 동안 cash_flow가 음수이면 신규 주거 건설을 멈추고 상업·산업 비중을 올린다(가설: 세수 기반 확충이 필요하다).",
+          "피크 후 12개월 인구가 -10% 이상 줄면, 세율을 바꾸기 전에 세 밸브와 cash_flow, 유지비 항목을 먼저 확인한다. 세 밸브가 모두 음수이면 세율 변경은 효과가 없으므로 건설과 예산 유지에 집중한다.",
+          "건설 정체(자금 < reserve) 개월 수를 추적하고, 12개월 중 3개월 이상 정체되면 reserve를 1000으로 낮추는 것을 허용한다. 이번에는 112개월 정체되는 동안 규칙을 한 번도 바꾸지 않았다.",
+          "주거 목표 비중은 0.68~0.7이 벤치마크(0.7)와 같지만, 상업 비중이 6/60=10%로 낮았으므로 com_valve > 0이면 상업을 우선 배정한다."
+        ],
+        "open_questions": [
+          "인구 붕괴(1906~1913)의 직접 원인은 무엇인가? 로그에는 자금과 cash_flow만 있고 유지비 내역이 없다. 테스트: 같은 시드에서 1906년에 경찰/소방 수와 도로·전력 유지비를 기록하고, 세율 5%에서 건설 상한 1건 vs 3건을 비교한다.",
+          "reserve 1000과 3000의 차이가 정체 개월 수에 얼마나 영향을 주는가? 테스트: seed 5에서 reserve만 1000으로 바꿔 months_build_stalled_for_money와 final_population을 비교한다.",
+          "가설: 건설 상한 1건 고정이 1902~1905의 성장을 제한했다. 테스트: 1902년부터 상한을 3~4건으로 올린 실행과 비교한다(벤치마크에서는 4건이 final_mean에서 우세했지만 mean_pop은 낮았다).",
+          "가설: 상업 비중이 낮아 세수가 약했다. 테스트: 상업 목표 비중을 20%로 올린 실행에서 cash_flow와 정체 개월 수를 비교한다.",
+          "세율 6~7%가 cash_flow를 개선하는지 불명확하다. 1912~1914의 7%에서는 개선이 없었다(12개월 자금 -401). 테스트: 인구가 안정적인 구간에서 6%를 24개월 유지하고 cash_flow와 인구 변화를 비교한다.",
+          "예측 적중률 0.45가 낮은 이유는 무엇인가? 가설: 예측 목표(3개월 인구 변화 등)가 하락기의 변동성에 비해 너무 구체적이었다. 테스트: 예측을 방향(증가/감소)만 쓰도록 단순화해 적중률을 비교한다."
+        ],
+        "by": "claude-sonnet-5-5",
+        "usage": {
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 7590,
+          "output_tokens": 3202,
+          "latency_s": 28.24,
+          "cost_usd": 0.056986
+        }
+      }
+    },
+    {
+      "digest": {
+        "run": "micropolis-20261011-034043-s6",
+        "seed": 6,
+        "years": 20,
+        "reviewer": "llm:claude-code/default",
+        "final_population": 3920.0,
+        "peak_population": 18740.0,
+        "peak_date": "1910-01",
+        "drop_after_peak_pct": 79.1,
+        "mean_population": 12182,
+        "months_build_stalled_for_money": 174,
+        "first_month_funds_below_1000": "1910-01",
+        "mean_tax_first_3_years": 5,
+        "mean_tax": 6.0,
+        "min_reserve": 1000,
+        "max_builds_per_month": 2,
+        "land_use_used": [
+          "separated"
+        ],
+        "reviews": 24,
+        "prediction_hit_rate": 0.37,
+        "built": {
+          "residential": 39,
+          "commercial": 6,
+          "industrial": 11,
+          "police": 2,
+          "fire": 2
+        },
+        "mean_residential_share_target": 0.69
+      },
+      "reflection": {
+        "mistakes": [
+          "reserve 3000을 20년 내내 유지한 것이 가장 큰 실수다. 1903-01 자금 2965로 처음 reserve 아래로 떨어졌고, 1906-01 자금 1934, 1910-01 자금 986, 1914-01 자금 422, 1917-01 이후 자금 0~5까지 내려갔다. 실행기는 reserve 아래에서 건설을 하지 않으므로 건설이 멈춘 달이 174개월(전체 240개월 중 약 72%)이다. 매 리뷰에서 '규칙대로 reserve를 낮추지 않는다'고 반복했지만 그 규칙 자체가 재정 악순환을 고착시켰다.",
+          "인구 18740에서 3920으로 79.1% 폭락했다(피크 1910-01, 최종 3920). 벤치마크 reserve 3000/세율 5 전략은 평균 14306, 최종 14732인데 이번 실행은 평균 12182, 최종 3920이었다. 자금이 바닥난 뒤 도시가 회복하지 못했다. 단, 폭락의 정확한 원인(예: 유지비 대비 세수, 노후 시설, 재해)은 로그의 수치만으로는 확인할 수 없다(가설: 인구 증가에 비해 세수와 경찰·소방 등 서비스 유지비가 맞지 않았을 것이다).",
+          "현금흐름 적자가 1903-01(-445)부터 1911-01(-214)까지 계속되는데도 근본 원인을 고치지 못했다. 세율은 5→7(1908)→8(1912)→5(1915)→7→5→7→5로 반복해서 바뀌었다. 세율 변경은 12개월 유지하겠다는 자체 규칙도 1915~1919에 매년 어겼다. 1912~1914의 세율 8에서도 cash_flow가 -173, -101, -76으로 여전히 음수였다. 그 사이 인구는 15960까지 줄었다(1915-01 기준 12개월 -1500).",
+          "건설 구성이 불균형했다. 주거 39, 상업 6, 산업 11이고 mean_residential_share_target은 0.69였다. 1900-07에 상업 수요(com_valve)가 -1500이었는데도 상업은 6개뿐이었다. 상업 부족이 세수 부족의 원인이라는 직접 증거는 없다(가설: 주거 대비 상업·산업 기반이 약해 세수가 부족했다).",
+          "예측 적중률이 0.37로 낮다. 후반 대부분의 리뷰 점수가 0.2였고 1910-01은 0.0이었다. 같은 진단('자금 < reserve → 건설 정지')을 반복할 뿐 새로운 가설을 시험하지 않았다. 리뷰 24회 중 상당수가 같은 문장의 반복이었다.",
+          "초기 성장(1901~1907)에서 건설 속도를 1건으로 낮춘 시점(1902-03)이 인구 5540으로 성장 중일 때였다. 이후 자금이 바닥나기 전에 수익 시설과 재정 기반을 확보하지 못했는지는 수치로 확인할 수 없다(가설)."
+        ],
+        "worked": [
+          "초기 전략(세율 5, 월 2건 건설)이 빠른 성장을 만들었다. 인구는 1900-12 500, 1901-05 1800, 1902-03 5540, 1904-01 10400, 1905-01 13680, 1907-01 17300으로 늘었고, 피크는 1910-01의 18740이다. 초기 5~10년 성장은 벤치마크 수준(피크 평균 23130)에 근접했다.",
+          "세율 5%는 성장기에 유지할 가치가 있었다. 1901-10 로그 기준 벤치마크에서 세율 5가 평균 인구가 가장 높았고(7022 vs 6133 vs 5709), 세율을 5로 유지한 1900~1907에 인구가 계속 늘었다. 이는 인과를 증명하지는 못한다.",
+          "첫 달에 발전소를 우선하고 주거·산업 수요가 양수일 때 주거를 올린 판단은 맞았다. 1900-07 res_valve 2000, ind_valve 1500, com_valve -1500일 때 주거 비중을 높였고 이후 인구가 늘었다."
+        ],
+        "rules_for_next_time": [
+          "reserve는 1000으로 시작한다. 벤치마크에서 reserve 1000/월 4건/세율 5의 최종 평균은 30208이고 reserve 3000/월 2건은 14732다. 자금이 reserve의 2배 미만으로 내려가면 건설 건수를 줄이고, 자금이 reserve 아래로 떨어진 달이 3개월 연속이면 reserve를 낮추지 말고 건설을 완전히 멈추고 세율/지출을 조정한다는 현행 방식은 폐기한다. 대신 '건설 정지 개월 수 / 전체 개월 수' 20% 초과를 경고선으로 둔다(이번 실행은 72%).",
+          "cash_flow가 12개월 연속 음수이면 건설을 늘리기 전에 경찰·소방 등 유지비 시설 수를 점검하고 신규 서비스 건물 추가를 중단한다. 세율은 1단계씩(예: 5→6)만 올리고 최소 12개월 유지한 뒤 cash_flow 변화를 비교한다. 이번 실행은 세율 5↔7을 매년 오갔으므로 세율 변경 간격 12개월 미만을 금지한다.",
+          "자금이 reserve의 1.5배를 넘는 동안에만 월 건설 건수를 올리고(최대 4), 자금이 reserve 아래로 내려가면 건설을 1건으로 줄인다. 자금이 0에 가까워지기 전(예: reserve 근처)에 조치한다. 현재 자금이 1000 아래로 처음 내려간 것이 1910-01이므로 그 이전 3년의 cash_flow 음수 추세(1903 -445, 1906 -358, 1908 -348)에서 개입했어야 한다.",
+          "인구가 피크 대비 10% 이상 줄면 즉시 리뷰하고 원인을 구분해서 기록한다(자금, 수요 valve, 세율). 세율 변경 후 12개월 뒤 인구 변화와 cash_flow를 반드시 비교하고 결과가 나쁘면 원래 값으로 되돌린다.",
+          "주거 비중 목표는 0.7 안팎을 유지하되 com_valve와 ind_valve가 양수가 된 시점마다 상업·산업 건설을 우선 배정한다. 이번 실행은 주거 39 대비 상업 6이었다. 상업 수요가 양수가 되면 상업 비중을 올리고 6개월 뒤 세수 변화를 측정한다.",
+          "같은 진단을 3번 이상 반복한 리뷰는 허용하지 않는다. 직전 2회 리뷰의 점수가 0.2 이하이면 반드시 다른 노브(reserve, 건설 건수, 세율 중 하나)를 바꿔 실험한다."
+        ],
+        "open_questions": [
+          "인구 폭락의 직접 원인은 무엇인가? 가설: 자금 고갈로 건설과 서비스 유지가 멈춰 수요가 줄었다. 검증: 같은 시드(6)에서 reserve 1000, 월 2건, 세율 5로 다시 돌려 1910년 전후의 자금, cash_flow, 인구를 비교한다.",
+          "reserve 1000과 월 4건 조합이 시드 6에서도 최종 인구가 높은가? 벤치마크(8개 시드)에서는 최종 평균 30208이지만 평균 인구는 12951로 reserve 3000/월 2건(14306)보다 낮다. 검증: 시드 6과 추가 시드에서 평균 인구와 최종 인구를 모두 기록한다.",
+          "세율 7~8이 이 도시에서 cash_flow를 개선했는가? 1908~1914의 cash_flow는 -348, -189, -162, -214, -173, -101, -76으로 음수가 줄었지만 인구는 감소했다. 세수 증가와 인구 이탈 중 무엇이 지배적인지는 알 수 없다. 검증: 세율 5와 7을 12개월씩 번갈아 적용하고 자금과 인구 변화를 비교한다.",
+          "가설: 경찰 2, 소방 2의 유지비 때문에 적자가 났을 수 있다. 검증: 서비스 시설 수를 달리해 cash_flow를 비교하고 범죄·화재 피해와의 균형을 확인한다.",
+          "가설: 월 건설 건수 1건이 피크 이후 회복을 막았을 수 있다. 검증: 자금이 reserve 위로 회복된 달에 건설 건수를 2~4로 올렸을 때 인구 증가 속도를 비교한다."
+        ],
+        "by": "claude-sonnet-5-5",
+        "usage": {
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 7170,
+          "output_tokens": 3155,
+          "latency_s": 29.86,
+          "cost_usd": 0.054836
+        }
+      }
+    }
+  ]
+}

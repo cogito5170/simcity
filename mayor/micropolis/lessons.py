@@ -118,6 +118,33 @@ def benchmark_grid(seeds, years: int = 20, grid: dict = GRID, engine_dir: str | 
     return rows
 
 
+TOOLS_GRID = {"road_spacing": (3, 4, 6), "road_funding": (50, 75, 100), "police_funding": (50, 100),
+              "fire_funding": (50, 100)}
+
+
+def benchmark_tools(seeds, base: dict, years: int = 20, grid: dict = TOOLS_GRID, engine_dir: str | None = None) -> list[dict]:
+    """Road spacing and department funding, varied on top of one base configuration (a GRID row)."""
+    import itertools
+    keys = list(grid)
+    rows = []
+    for values in itertools.product(*(grid[k] for k in keys)):
+        cfg = dict(zip(keys, values))
+        st = grid_strategy(base)
+        for k, v in cfg.items():
+            setattr(st, k, v)
+        means, crime, roads = [], [], []
+        for seed in seeds:
+            with tempfile.TemporaryDirectory() as d:
+                r = run_mayor(years=years, seed=seed, reviewer=_Fixed(st), out_dir=d, engine_dir=engine_dir)
+            means.append(statistics.mean(m["stats"]["population"] for m in r.months))
+            crime.append(statistics.mean(m["stats"]["crime_avg"] for m in r.months))
+            roads.append(r.months[-1]["stats"]["road_total"])
+        rows.append({**cfg, "mean_pop": round(statistics.mean(means)), "mean_pop_min_seed": round(min(means)),
+                     "mean_pop_max_seed": round(max(means)), "crime_mean": round(statistics.mean(crime), 1),
+                     "road_tiles_end": round(statistics.mean(roads))})
+    return rows
+
+
 def main_effects(rows: list[dict], grid: dict = GRID, metric: str = "mean_pop") -> dict:
     """Average of `metric` for each value of each knob, over all other knob settings."""
     return {k: {str(v): round(statistics.mean(r[metric] for r in rows if r[k] == v)) for v in vals}
@@ -174,13 +201,22 @@ def build_lessons(run_dirs, bench_seeds, llm=None, years: int = 20, engine_dir: 
                   grid: bool = True, reflect_on=None) -> dict:
     """grid=True: v2 lessons (every knob varied). reflect_on: run dirs to reflect on (default: all)."""
     bench = benchmark_table(bench_seeds, years, engine_dir=engine_dir)
-    out = {"version": 2 if grid else 1, "benchmarks": bench}
+    out = {"version": 3 if grid else 1, "benchmarks": bench}
     if grid:
         rows = benchmark_grid(bench_seeds, years, engine_dir=engine_dir)
         ranked = sorted(rows, key=lambda r: -r["mean_pop"])
         out["grid"] = {"knobs": {k: list(v) for k, v in GRID.items()}, "metric": "20-year mean population",
                        "main_effects": main_effects(rows), "best": ranked[:5], "worst": ranked[-3:],
                        "rows": rows}
+        best = {k: ranked[0][k] for k in GRID}
+        trows = benchmark_tools(bench_seeds, best, years, engine_dir=engine_dir)
+        out["tools"] = {"base": best, "knobs": {k: list(v) for k, v in TOOLS_GRID.items()},
+                        "main_effects": main_effects(trows, TOOLS_GRID),
+                        "crime_by_police_funding": main_effects(trows, {"police_funding": TOOLS_GRID["police_funding"]},
+                                                                "crime_mean"),
+                        "road_tiles_by_road_funding": main_effects(trows, {"road_funding": TOOLS_GRID["road_funding"]},
+                                                                   "road_tiles_end"),
+                        "best": sorted(trows, key=lambda r: -r["mean_pop"])[:3], "rows": trows}
     reflect_set = {str(Path(d)) for d in (reflect_on if reflect_on is not None else run_dirs)}
     past = []
     for d in run_dirs:
@@ -213,6 +249,15 @@ def format_lessons(lessons: dict, max_rules: int = 12) -> str:
         out.append("Worst combinations:")
         out += [f"- {cfg_txt(r)}" for r in g["worst"]]
         out.append("Seed ranges are wide: the same strategy can do very differently in another city.")
+    t = lessons.get("tools")
+    if t:
+        out.append(f"Road spacing and department funding, varied on top of the best combination ({t['base']}):")
+        for k, eff in t["main_effects"].items():
+            out.append(f"- {k}: " + ", ".join(f"{v} -> mean pop {m}" for v, m in eff.items()))
+        out.append("- crime by police_funding: " + ", ".join(f"{v}% -> {m}" for v, m in
+                                                          t["crime_by_police_funding"]["police_funding"].items()))
+        out.append("- road tiles left after 20 years by road_funding: " + ", ".join(
+            f"{v}% -> {m}" for v, m in t["road_tiles_by_road_funding"]["road_funding"].items()))
     runs = lessons.get("past_runs", [])
     if runs:
         out.append("Your past runs, measured by code:")

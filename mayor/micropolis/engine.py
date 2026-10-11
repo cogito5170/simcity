@@ -44,7 +44,20 @@ def load_modules(explicit: str | None = None):
         sys.modules["gymtropolis"] = pkg
     _mods["engine"] = importlib.import_module("gymtropolis.engine")
     _mods["tiles"] = importlib.import_module("gymtropolis.tiles")
+    lib = importlib.import_module("gymtropolis._native").lib
+    if hasattr(lib, "mp_set_budget"):   # added by tools/setup_micropolis.sh
+        import ctypes
+        lib.mp_set_budget.restype = None
+        lib.mp_set_budget.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        lib.mp_budget_info.restype = None
+        lib.mp_budget_info.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_double)]
+        lib.mp_update_fund_effects.restype = None
+        lib.mp_update_fund_effects.argtypes = [ctypes.c_void_p]
+        _mods["budget_lib"] = lib
     return _mods["engine"], _mods["tiles"]
+
+
+BUDGET_KEYS = ("road_pct", "police_pct", "fire_pct", "road_fund", "police_fund", "fire_fund", "tax_fund", "auto_budget")
 
 
 # Stats the mayor reads every month (all exact engine values).
@@ -91,10 +104,34 @@ class City:
         self.e.set_auto_budget(True)
         self.e.set_auto_bulldoze(True)
         self.width, self.height = self.eng.WORLD_W, self.eng.WORLD_H
+        self._blib = _mods.get("budget_lib")
+
+    @property
+    def has_budget_control(self) -> bool:
+        return self._blib is not None
+
+    def set_budget(self, road: int, police: int, fire: int) -> None:
+        """Department funding in %. All 100 = engine auto-budget (full funding when affordable).
+        Anything lower turns auto-budget off so the engine spends only these shares (budget.cpp)."""
+        if self._blib is None:
+            raise RuntimeError("engine built without budget control: rerun tools/setup_micropolis.sh")
+        full = road >= 100 and police >= 100 and fire >= 100
+        self.e.set_auto_budget(full)
+        self._blib.mp_set_budget(self.e._ptr, int(road), int(police), int(fire))
+
+    def budget(self) -> dict:
+        if self._blib is None:
+            return {}
+        import ctypes
+        buf = (ctypes.c_double * 8)()
+        self._blib.mp_budget_info(self.e._ptr, buf)
+        return dict(zip(BUDGET_KEYS, (float(x) for x in buf)))
 
     # -- time
     def advance_month(self) -> None:
         self.e.advance(self.eng.TICKS_PER_MONTH)
+        if self._blib is not None:   # apply funding shortfalls like the original game UI did
+            self._blib.mp_update_fund_effects(self.e._ptr)
 
     @property
     def city_time(self) -> int:
@@ -108,7 +145,9 @@ class City:
     # -- observation
     def stats(self) -> dict:
         s = self.e.stats()
-        return {k: float(s[k]) for k in STAT_KEYS}
+        out = {k: float(s[k]) for k in STAT_KEYS}
+        out.update(self.budget())   # yearly funds/needs and current funding shares (exact engine values)
+        return out
 
     def tiles(self):
         return self.e.tiles.copy()

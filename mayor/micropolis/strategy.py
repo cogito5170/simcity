@@ -18,6 +18,10 @@ LIMITS = {
     "zones_per_police": (4, 200),
     "zones_per_fire": (4, 200),
     "max_builds_per_month": (0, 8),
+    "road_funding": (0, 100),
+    "police_funding": (0, 100),
+    "fire_funding": (0, 100),
+    "road_spacing": (3, 6),
 }
 VALVE_MAX = {"residential": 2000.0, "commercial": 1500.0, "industrial": 1500.0}
 
@@ -33,6 +37,10 @@ class Strategy:
     max_builds_per_month: int = 2
     build_specials: bool = True   # stadium / seaport / airport when the engine caps demand without them
     land_use: str = "mixed"       # "mixed" | "separated" (industry in its own district, away from housing)
+    road_funding: int = 100       # % of road maintenance paid; below 100 roads decay (engine budget.cpp)
+    police_funding: int = 100     # % of police station upkeep paid; lowers police effect
+    fire_funding: int = 100       # % of fire station upkeep paid; lowers fire effect
+    road_spacing: int = 6         # connector road after every N slots (3-6); only applies before the first zone
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -105,6 +113,9 @@ def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_sinc
     city.set_tax(strategy.tax_rate)
     planner.reserve = strategy.reserve_funds
     planner.districts = strategy.land_use == "separated"
+    planner.set_road_spacing(strategy.road_spacing)
+    if city.has_budget_control:
+        city.set_budget(strategy.road_funding, strategy.police_funding, strategy.fire_funding)
     done: list[ActionResult] = []
     budget = strategy.max_builds_per_month
 

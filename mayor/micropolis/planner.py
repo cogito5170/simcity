@@ -54,16 +54,16 @@ class ActionResult:
                 "detail": self.detail, "where": list(self.where) if self.where else None}
 
 
-def slot_x(j: int) -> int:
-    return OX + 3 * j + (j // CONN_EVERY)
+def slot_x(j: int, conn_every: int = CONN_EVERY) -> int:
+    return OX + 3 * j + (j // conn_every)
 
 
-def slot_order(max_cols: int = 33):
+def slot_order(max_cols: int = 33, conn_every: int = CONN_EVERY):
     """Fill compactly: 12 columns of every row pair, then the next 12 columns."""
     for b0 in range(0, max_cols, BLOCK_COLS):
         for p in range(MAX_PAIRS):
             for j in range(b0, min(b0 + BLOCK_COLS, max_cols)):
-                if slot_x(j) + 2 > 117:
+                if slot_x(j, conn_every) + 2 > 117:
                     continue
                 for r in ROW_CENTERS:
                     yield (p, j, r)
@@ -79,6 +79,7 @@ class Planner:
     plants: list = field(default_factory=list)       # (x, y, kind)
     blocked: set = field(default_factory=set)
     districts: bool = False                          # separate industrial district (see next_slot)
+    conn_every: int = CONN_EVERY                     # connector road after every N slots; fixed once building starts
 
     def __post_init__(self):
         self.T = self.city.Tool
@@ -108,10 +109,10 @@ class Planner:
             return s not in self.used_slots and s not in self.blocked
         if self.districts and kind is not None:
             want_ind = kind == "industrial"
-            for s in slot_order():
+            for s in slot_order(conn_every=self.conn_every):
                 if free(s) and (s[0] >= IND_PAIR_START) == want_ind:
                     return s
-        for s in slot_order():
+        for s in slot_order(conn_every=self.conn_every):
             if free(s):
                 return s
         return None
@@ -121,7 +122,7 @@ class Planner:
         """Tool calls (tool, x, y) still missing so that slot (p, j) has road + power."""
         T = self.T
         y_top, y_bot = OY + PERIOD * p, OY + PERIOD * (p + 1)
-        x_end = slot_x(j) + 2
+        x_end = slot_x(j, self.conn_every) + 2
         roads, wires = [], []
         for y in (y_top, y_bot):
             for x in range(OX - 2, x_end + 1):
@@ -130,8 +131,8 @@ class Planner:
         for y in range(OY, y_bot + 1):                       # vertical road
             if (OX - 2, y) not in self.roads:
                 roads.append((T.ROAD, OX - 2, y))
-        for c in range(CONN_EVERY, j + 1, CONN_EVERY):        # connector columns up to j
-            cx = slot_x(c) - 1
+        for c in range(self.conn_every, j + 1, self.conn_every):   # connector columns up to j
+            cx = slot_x(c, self.conn_every) - 1
             for y in range(y_top, y_bot + 1):
                 if (cx, y) not in self.roads:
                     roads.append((T.ROAD, cx, y))
@@ -176,7 +177,7 @@ class Planner:
         if slot is None:
             return ActionResult(f"place:{kind}", False, detail="map full")
         p, j, r = slot
-        cx, cy = slot_x(j) + 1, OY + PERIOD * p + r
+        cx, cy = slot_x(j, self.conn_every) + 1, OY + PERIOD * p + r
         calls = self._infra_for(p, j) + [(self.kind_tool[kind], cx, cy)]
         ok, need = self._affordable(calls)
         if not ok:
@@ -233,3 +234,11 @@ class Planner:
         if ok:
             self.specials[kind] = (x, y)
         return ActionResult(f"special:{kind}", ok, spent, why or kind, (x, y))
+
+    def set_road_spacing(self, every: int) -> bool:
+        """Choose connector-road spacing (3-6 slots). Only before the first zone: the grid is fixed after."""
+        every = max(3, min(6, int(every)))
+        if self.used_slots or every == self.conn_every:
+            return every == self.conn_every
+        self.conn_every = every
+        return True

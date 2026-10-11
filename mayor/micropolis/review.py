@@ -121,8 +121,9 @@ Once per review you set the STRATEGY for the coming period. A plain-code executo
 it builds a power plant first (none yet, or zones unpowered 3 months in a row), buys a missing stadium/seaport/
 airport when the engine caps demand (if build_specials), adds police/fire stations by your ratios, then zones:
 among types with positive engine demand, the one furthest below its zone_mix target share. At most
-max_builds_per_month builds, never spending below reserve_funds. It cannot add roads beyond the fixed grid,
-parks or rail.
+max_builds_per_month builds, never spending below reserve_funds. It also applies your department funding shares
+and, before the first zone only, your road_spacing (a connector road after every N zone slots; fixed afterwards).
+It cannot build parks or rail.
 
 Facts verified in this engine (by our own tests, not assumptions):
 - Roads do not carry power; zones pass power to touching zones. One coal plant powered ~48 zones in a test;
@@ -135,6 +136,10 @@ Facts verified in this engine (by our own tests, not assumptions):
 - Engine rule (source code): residential demand is held at 0 when res_pop > 500 and there is no stadium;
   industrial when ind_pop > 70 and no seaport; commercial when com_pop > 100 and no airport.
   With build_specials=true the executor buys the missing one when this happens.
+- Department funding (road/police/fire %, verified in the engine): below 100 the shortfall is real.
+  Road effect falls in proportion and roads decay into rubble; police/fire coverage weakens (8-year test,
+  road+police+fire at 50%: road effect 32->16, crime 97->109, road tiles 202->173, but more money left;
+  at 0%: crime 167, road tiles 140). Yearly needs are in road_fund/police_fund/fire_fund; tax income is tax_fund.
 - land_use "separated" puts new industry in its own district ~50 tiles from housing. Fixed-strategy tests,
   8 seeds, 20 years, tax 7%: separated peaked higher (mean 21.0k vs 18.3k) but ended lower (mean 8.6k vs
   11.4k) with higher average pollution (57 vs 45). Why pollution rose is not established (longer commutes?).
@@ -157,7 +162,8 @@ Return ONE JSON object, no prose:
 {{"strategy": {{"tax_rate": int {tax}, "zone_mix": {{"residential": w, "commercial": w, "industrial": w}},
   "reserve_funds": int {reserve}, "zones_per_police": int {police}, "zones_per_fire": int {fire},
   "power_type": "coal"|"nuclear", "max_builds_per_month": int {builds}, "build_specials": true|false,
-  "land_use": "mixed"|"separated"}},
+  "land_use": "mixed"|"separated", "road_funding": int 0-100, "police_funding": int 0-100,
+  "fire_funding": int 0-100, "road_spacing": int 3-6}},
  "reasoning": ["short points in Korean, citing the measured numbers you rely on"],
  "alternatives": [{{"option": "Korean", "why_not": "Korean"}}],
  "expected": {{"population": "up|down|flat", "funds": "...", "crime_avg": "...", "pollution_avg": "...", "traffic_avg": "..."}},
