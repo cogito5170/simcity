@@ -65,6 +65,27 @@ class LessonsFormatTests(unittest.TestCase):
         self.assertLess(txt.index("Benchmarks"), txt.index("HYPOTHESES"))
 
 
+class GridTests(unittest.TestCase):
+    def test_grid_strategy_and_main_effects(self):
+        from mayor.micropolis.lessons import grid_strategy, main_effects
+        st = grid_strategy({"tax_rate": 5, "residential_share": 0.6, "reserve_funds": 1000,
+                            "max_builds_per_month": 2, "land_use": "separated"})
+        self.assertEqual((st.zone_mix["commercial"], st.land_use, st.tax_rate), (0.2, "separated", 5))
+        rows = [{"a": 1, "b": "x", "mean_pop": 10}, {"a": 1, "b": "y", "mean_pop": 20},
+                {"a": 2, "b": "x", "mean_pop": 30}, {"a": 2, "b": "y", "mean_pop": 40}]
+        self.assertEqual(main_effects(rows, {"a": (1, 2), "b": ("x", "y")}),
+                         {"a": {"1": 15, "2": 35}, "b": {"x": 20, "y": 30}})
+
+    def test_format_includes_grid(self):
+        row = {"tax_rate": 5, "residential_share": 0.7, "reserve_funds": 3000, "max_builds_per_month": 2,
+               "land_use": "mixed", "seeds": [9], "mean_pop": 100, "mean_pop_min_seed": 90, "mean_pop_max_seed": 110,
+               "final_mean": 120}
+        txt = format_lessons({"grid": {"rows": [row], "metric": "20-year mean population",
+                                       "main_effects": {"residential_share": {"0.7": 100}}, "best": [row], "worst": [row]}})
+        self.assertIn("residential_share: 0.7 -> 100", txt)
+        self.assertIn("Seed ranges are wide", txt)
+
+
 @unittest.skipUnless(HAVE_ENGINE, "Micropolis engine not built")
 class DigestTests(unittest.TestCase):
     def test_digest_and_reflection(self):

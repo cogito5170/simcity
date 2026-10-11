@@ -49,6 +49,9 @@ def run_digest(run_dir: str | Path) -> dict:
         "max_builds_per_month": max((s["max_builds_per_month"] for s in strat), default=None),
         "land_use_used": sorted({s.get("land_use", "mixed") for s in strat}),
         "reviews": len(reviews), "prediction_hit_rate": round(statistics.mean(scores), 2) if scores else None,
+        "built": {k: summ.get("planner", {}).get(k) for k in ("residential", "commercial", "industrial", "police", "fire")},
+        "mean_residential_share_target": round(statistics.mean(st["zone_mix"]["residential"] for st in strat), 2)
+        if strat else None,
     }
 
 
@@ -80,6 +83,45 @@ def benchmark_table(seeds, years: int = 20, taxes=(5, 7, 9, 11), engine_dir: str
                      "final_median": round(statistics.median(finals)), "peak_mean": round(statistics.mean(peaks)),
                      "months_stalled_mean": round(statistics.mean(stalls), 1)})
     return rows
+
+
+GRID = {"tax_rate": (5, 7, 9), "residential_share": (0.4, 0.5, 0.6, 0.7), "reserve_funds": (1000, 3000),
+        "max_builds_per_month": (2, 4), "land_use": ("mixed", "separated")}
+
+
+def grid_strategy(cfg: dict) -> Strategy:
+    r = cfg["residential_share"]
+    return Strategy(tax_rate=cfg["tax_rate"], reserve_funds=cfg["reserve_funds"],
+                    max_builds_per_month=cfg["max_builds_per_month"], land_use=cfg["land_use"],
+                    zone_mix={"residential": r, "commercial": round((1 - r) / 2, 3), "industrial": round((1 - r) / 2, 3)})
+
+
+def benchmark_grid(seeds, years: int = 20, grid: dict = GRID, engine_dir: str | None = None) -> list[dict]:
+    """Every combination of the knobs, each on every seed. Returns one row per combination."""
+    import itertools
+    keys = list(grid)
+    rows = []
+    for values in itertools.product(*(grid[k] for k in keys)):
+        cfg = dict(zip(keys, values))
+        finals, means, peaks = [], [], []
+        for seed in seeds:
+            with tempfile.TemporaryDirectory() as d:
+                r = run_mayor(years=years, seed=seed, reviewer=_Fixed(grid_strategy(cfg)), out_dir=d,
+                              engine_dir=engine_dir)
+            pops = [m["stats"]["population"] for m in r.months]
+            finals.append(pops[-1])
+            means.append(statistics.mean(pops))
+            peaks.append(max(pops))
+        rows.append({**cfg, "seeds": list(seeds), "mean_pop": round(statistics.mean(means)),
+                     "mean_pop_min_seed": round(min(means)), "mean_pop_max_seed": round(max(means)),
+                     "final_mean": round(statistics.mean(finals)), "peak_mean": round(statistics.mean(peaks))})
+    return rows
+
+
+def main_effects(rows: list[dict], grid: dict = GRID, metric: str = "mean_pop") -> dict:
+    """Average of `metric` for each value of each knob, over all other knob settings."""
+    return {k: {str(v): round(statistics.mean(r[metric] for r in rows if r[k] == v)) for v in vals}
+            for k, vals in grid.items()}
 
 
 REFLECT_PROMPT = """You were the AI mayor of a Micropolis city for {years} game years. Below is what the logs
@@ -128,15 +170,26 @@ def reflect(llm, run_dir: str | Path, bench: list[dict]) -> dict:
         "by": res.model, "usage": res.usage()}
 
 
-def build_lessons(run_dirs, bench_seeds, llm=None, years: int = 20, engine_dir: str | None = None) -> dict:
+def build_lessons(run_dirs, bench_seeds, llm=None, years: int = 20, engine_dir: str | None = None,
+                  grid: bool = True, reflect_on=None) -> dict:
+    """grid=True: v2 lessons (every knob varied). reflect_on: run dirs to reflect on (default: all)."""
     bench = benchmark_table(bench_seeds, years, engine_dir=engine_dir)
+    out = {"version": 2 if grid else 1, "benchmarks": bench}
+    if grid:
+        rows = benchmark_grid(bench_seeds, years, engine_dir=engine_dir)
+        ranked = sorted(rows, key=lambda r: -r["mean_pop"])
+        out["grid"] = {"knobs": {k: list(v) for k, v in GRID.items()}, "metric": "20-year mean population",
+                       "main_effects": main_effects(rows), "best": ranked[:5], "worst": ranked[-3:],
+                       "rows": rows}
+    reflect_set = {str(Path(d)) for d in (reflect_on if reflect_on is not None else run_dirs)}
     past = []
     for d in run_dirs:
         entry = {"digest": run_digest(d)}
-        if llm is not None:
-            entry["reflection"] = reflect(llm, d, bench)
+        if llm is not None and str(Path(d)) in reflect_set:
+            entry["reflection"] = reflect(llm, d, out.get("grid", {}).get("best", bench))
         past.append(entry)
-    return {"version": 1, "benchmarks": bench, "past_runs": past}
+    out["past_runs"] = past
+    return out
 
 
 def format_lessons(lessons: dict, max_rules: int = 12) -> str:
@@ -145,6 +198,21 @@ def format_lessons(lessons: dict, max_rules: int = 12) -> str:
     for b in lessons.get("benchmarks", []):
         out.append(f"- {b['strategy']}: final mean {b['final_mean']}, median {b['final_median']}, "
                    f"peak mean {b['peak_mean']}, months with builds stalled for money {b['months_stalled_mean']}")
+    g = lessons.get("grid")
+    if g:
+        out.append(f"Knob experiment measured by code ({len(g['rows'])} fixed strategies x seeds "
+                   f"{g['rows'][0]['seeds']}, 20 years; metric = {g['metric']}).")
+        out.append("Average of the metric for each knob value, over all other settings (main effects):")
+        for k, eff in g["main_effects"].items():
+            out.append(f"- {k}: " + ", ".join(f"{v} -> {m}" for v, m in eff.items()))
+        cfg_txt = lambda r: (f"tax {r['tax_rate']}%, residential {r['residential_share']}, reserve {r['reserve_funds']}, "
+                             f"builds {r['max_builds_per_month']}/month, {r['land_use']}: mean pop {r['mean_pop']} "
+                             f"(seed range {r['mean_pop_min_seed']}-{r['mean_pop_max_seed']}), final {r['final_mean']}")
+        out.append("Best combinations:")
+        out += [f"- {cfg_txt(r)}" for r in g["best"]]
+        out.append("Worst combinations:")
+        out += [f"- {cfg_txt(r)}" for r in g["worst"]]
+        out.append("Seed ranges are wide: the same strategy can do very differently in another city.")
     runs = lessons.get("past_runs", [])
     if runs:
         out.append("Your past runs, measured by code:")
@@ -154,7 +222,9 @@ def format_lessons(lessons: dict, max_rules: int = 12) -> str:
                        f"({d['peak_date']}), drop after peak {d['drop_after_peak_pct']}%, mean tax first 3y "
                        f"{d['mean_tax_first_3_years']}, min reserve {d['min_reserve']}, max builds/month "
                        f"{d['max_builds_per_month']}, funds first <1000 at {d['first_month_funds_below_1000']}, "
-                       f"months stalled for money {d['months_build_stalled_for_money']}")
+                       f"months stalled for money {d['months_build_stalled_for_money']}"
+                       + (f", built R/C/I {d['built']['residential']}/{d['built']['commercial']}/{d['built']['industrial']}"
+                          f", mean residential target {d['mean_residential_share_target']}" if d.get("built") else ""))
         rules = [x for r in runs for x in (r.get("reflection") or {}).get("rules_for_next_time", [])]
         if rules:
             out.append("Rules a previous mayor wrote after reflecting on those runs (HYPOTHESES, check them against "

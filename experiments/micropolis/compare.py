@@ -60,7 +60,11 @@ def main():
     a = ap.parse_args()
     rows = {"고정 전략 (세율 7%)": lambda: Fixed(Strategy()),
             "고정 전략 (세율 9%)": lambda: Fixed(Strategy(tax_rate=9)),
-            "규칙 기반 재검토": RuleReviewer}
+            "규칙 기반 재검토": RuleReviewer,
+            # best of the knob grid measured on seeds 9-16 (lessons v2), so testing it on 1-6 is out-of-sample
+            "고정 전략 (격자 최고: 세율5·주거0.7·예비3000·월2·분리)": lambda: Fixed(Strategy(
+                tax_rate=5, reserve_funds=3000, max_builds_per_month=2, land_use="separated",
+                zone_mix={"residential": 0.7, "commercial": 0.15, "industrial": 0.15}))}
     table = {name: {s: run_baseline(mk, s, a.years) for s in a.seeds} for name, mk in rows.items()}
     usage = {}
     for label, *dirs in a.llm:

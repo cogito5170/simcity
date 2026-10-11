@@ -348,7 +348,8 @@ def cmd_lessons(cfg, args) -> int:
     llm = make_llm(args.provider, args.model) if args.provider else None
     print(f"benchmarks on seeds {args.bench_seeds}; reflecting on {len(args.runs)} runs"
           + (f" with {args.provider}" if llm else " (no reflection: give --provider)"), flush=True)
-    les = build_lessons(args.runs, args.bench_seeds, llm=llm, years=args.years, engine_dir=args.engine_dir)
+    les = build_lessons(args.runs, args.bench_seeds, llm=llm, years=args.years, engine_dir=args.engine_dir,
+                        grid=not args.tax_only, reflect_on=args.reflect_on)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(les, indent=2, ensure_ascii=False), encoding="utf-8")
     print(format_lessons(les))
@@ -436,6 +437,8 @@ def main(argv=None) -> int:
     ls.add_argument("--model")
     ls.add_argument("--engine-dir")
     ls.add_argument("--out", default="runs/lessons.json")
+    ls.add_argument("--tax-only", action="store_true", help="v1 benchmark (tax rate only) instead of the knob grid")
+    ls.add_argument("--reflect-on", nargs="*", help="only reflect on these run dirs (default: all runs)")
     us = sub.add_parser("usage", help="LLM call and token usage from the ledger")
     us.add_argument("--run", help="only calls tagged with this run name (substring)")
     r = sub.add_parser("report", help="print the state timeline of a run")
