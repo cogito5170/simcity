@@ -1,0 +1,111 @@
+diff --git a/src/console_cmds.cpp b/src/console_cmds.cpp
+index 230b386..218d76c 100644
+--- a/src/console_cmds.cpp
++++ b/src/console_cmds.cpp
+@@ -362,6 +362,23 @@ static bool ConZoomToLevel(std::span<std::string_view> argv)
+  *       and y coordinates.
+  * @return True when either console help was shown or a proper amount of parameters given.
+  */
++/* AI mayor patch: 'shotat <x> <y> <width> <height> <zoom 0-5> <name>' saves a screenshot centred on tile (x, y).
++ * Works on dedicated servers, whose main viewport never moves. */
++static bool ConShotAt(std::span<std::string_view> argv)
++{
++	if (argv.size() != 7) {
++		IConsolePrint(CC_HELP, "Usage: 'shotat <x> <y> <width> <height> <zoom 0-5> <name>'.");
++		return true;
++	}
++	auto x = ParseInteger(argv[1]), y = ParseInteger(argv[2]), w = ParseInteger(argv[3]), h = ParseInteger(argv[4]), z = ParseInteger(argv[5]);
++	if (!x || !y || !w || !h || !z || *x >= Map::SizeX() || *y >= Map::SizeY() || *w == 0 || *h == 0 || *w > 4096 || *h > 4096 || *z > 5) {
++		IConsolePrint(CC_ERROR, "shotat: bad arguments.");
++		return true;
++	}
++	MakeScreenshotAt(*x, *y, *w, *h, static_cast<ZoomLevel>(*z), std::string(argv[6]));
++	return true;
++}
++
+ static bool ConScrollToTile(std::span<std::string_view> argv)
+ {
+ 	if (argv.empty()) {
+@@ -2896,6 +2913,7 @@ void IConsoleStdLibRegister()
+ 	IConsole::CmdRegister("script",                  ConScript);
+ 	IConsole::CmdRegister("zoomto",                  ConZoomToLevel);
+ 	IConsole::CmdRegister("scrollto",                ConScrollToTile);
++	IConsole::CmdRegister("shotat",                  ConShotAt);
+ 	IConsole::CmdRegister("alias",                   ConAlias);
+ 	IConsole::CmdRegister("load",                    ConLoad);
+ 	IConsole::CmdRegister("load_save",               ConLoad);
+diff --git a/src/screenshot.cpp b/src/screenshot.cpp
+index d26341d..35845b2 100644
+--- a/src/screenshot.cpp
++++ b/src/screenshot.cpp
+@@ -186,6 +186,12 @@ static bool MakeSmallScreenshot(bool crashlog)
+  * @param height the height of the screenshot, or 0 for current viewport height (needs to be 0 with SC_VIEWPORT, SC_CRASHLOG, and SC_WORLD).
+  * @return Viewport
+  */
++/* AI mayor patch: a dedicated server never redraws, so its main viewport never moves; MakeScreenshotAt()
++ * sets these to centre a sized screenshot on a chosen spot at a chosen zoom. */
++static bool _shot_override = false;
++static Point _shot_center;
++static ZoomLevel _shot_zoom = ZoomLevel::Normal;
++
+ static Viewport SetupScreenshotViewport(ScreenshotType t, uint32_t width = 0, uint32_t height = 0)
+ {
+ 	Viewport vp{};
+@@ -250,6 +256,13 @@ static Viewport SetupScreenshotViewport(ScreenshotType t, uint32_t width = 0, ui
+ 				vp.virtual_width = width << to_underlying(vp.zoom);
+ 				vp.virtual_height = height << to_underlying(vp.zoom);
+ 			}
++			if (_shot_override && width != 0 && height != 0) {
++				vp.zoom = _shot_zoom;
++				vp.virtual_width = width << to_underlying(vp.zoom);
++				vp.virtual_height = height << to_underlying(vp.zoom);
++				vp.virtual_left = _shot_center.x - vp.virtual_width / 2;
++				vp.virtual_top = _shot_center.y - vp.virtual_height / 2;
++			}
+ 
+ 			/* Compute pixel coordinates */
+ 			vp.left = 0;
+@@ -453,6 +466,22 @@ static bool RealMakeScreenshot(ScreenshotType t, const std::string &name, uint32
+  * @return true iff the screenshot was successfully made.
+  * @see MakeScreenshotWithConfirm
+  */
++/**
++ * AI mayor patch: screenshot of width x height pixels centred on tile (x, y) at the given zoom level.
++ * Runs on the main thread like MakeScreenshot; the file appears shortly after this returns.
++ */
++void MakeScreenshotAt(uint tile_x, uint tile_y, uint32_t width, uint32_t height, ZoomLevel zoom, const std::string &name)
++{
++	VideoDriver::GetInstance()->QueueOnMainThread([=] {
++		int px = tile_x * TILE_SIZE + TILE_SIZE / 2, py = tile_y * TILE_SIZE + TILE_SIZE / 2;
++		_shot_center = RemapCoords2(px, py);
++		_shot_zoom = zoom;
++		_shot_override = true;
++		RealMakeScreenshot(SC_DEFAULTZOOM, name, width, height);
++		_shot_override = false;
++	});
++}
++
+ bool MakeScreenshot(ScreenshotType t, const std::string &name, uint32_t width, uint32_t height)
+ {
+ 	if (t == SC_CRASHLOG) {
+diff --git a/src/screenshot.h b/src/screenshot.h
+index a205e6e..fe53ee6 100644
+--- a/src/screenshot.h
++++ b/src/screenshot.h
+@@ -10,6 +10,8 @@
+ #ifndef SCREENSHOT_H
+ #define SCREENSHOT_H
+ 
++#include "zoom_type.h"
++
+ std::string_view GetCurrentScreenshotExtension();
+ 
+ /** Type of requested screenshot */
+@@ -24,6 +26,7 @@ enum ScreenshotType : uint8_t {
+ };
+ 
+ bool MakeHeightmapScreenshot(std::string_view filename);
++void MakeScreenshotAt(uint tile_x, uint tile_y, uint32_t width, uint32_t height, ZoomLevel zoom, const std::string &name);
+ void MakeScreenshotWithConfirm(ScreenshotType t);
+ bool MakeScreenshot(ScreenshotType t, const std::string &name, uint32_t width = 0, uint32_t height = 0);
+ bool MakeMinimapWorldScreenshot();
