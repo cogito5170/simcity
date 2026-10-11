@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build OpenTTD 15.3 (with the 'shotat' screenshot patch), SDL2 headers, and the OpenGFX base set from source.
+# Build OpenTTD 15.3 (with the mayor patch: shotat screenshots, vehicles drawn on dedicated servers), SDL2 headers, and the OpenGFX base set from source.
 # Everything comes through git; no package registry is needed. Results:
 #   $ROOT/openttd-src/build/openttd   (+ baseset/opengfx, game/llm_bridge, ai/idle next to it)
 set -e
@@ -23,7 +23,7 @@ ln -sf "$ROOT/grfcodec-src/build/grfid" local/bin/grfid
 [ -f opengfx-src/opengfx.obg ] || (cd opengfx-src && PATH="$ROOT/local/bin:$PATH" make -j2 GIMP=)
 # OpenTTD with the patch
 cd openttd-src
-git apply --check "$HERE/tools/openttd_patches/shotat.patch" 2>/dev/null && git apply "$HERE/tools/openttd_patches/shotat.patch"
+git apply --check "$HERE/tools/openttd_patches/mayor.patch" 2>/dev/null && git apply "$HERE/tools/openttd_patches/mayor.patch"
 mkdir -p build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$ROOT/local"
 make -j4 openttd

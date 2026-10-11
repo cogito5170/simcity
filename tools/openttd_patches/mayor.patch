@@ -109,3 +109,18 @@ index a205e6e..fe53ee6 100644
  void MakeScreenshotWithConfirm(ScreenshotType t);
  bool MakeScreenshot(ScreenshotType t, const std::string &name, uint32_t width = 0, uint32_t height = 0);
  bool MakeMinimapWorldScreenshot();
+diff --git a/src/vehicle_base.h b/src/vehicle_base.h
+index 7edf724..2b7c7c9 100644
+--- a/src/vehicle_base.h
++++ b/src/vehicle_base.h
+@@ -1157,8 +1157,8 @@ struct SpecializedVehicle : public Vehicle {
+ 	{
+ 		bool sprite_has_changed = false;
+ 
+-		/* Skip updating sprites on dedicated servers without screen */
+-		if (_network_dedicated) return;
++		/* AI mayor patch: a dedicated server normally skips this; the mayor's 'shotat' screenshots need
++		 * current vehicle sprites, so they are kept up to date here too. */
+ 
+ 		/* Explicitly choose method to call to prevent vtable dereference -
+ 		 * it gives ~3% runtime improvements in games with many vehicles */
