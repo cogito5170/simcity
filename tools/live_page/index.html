@@ -131,7 +131,7 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
 
   <div class="main">
     <div class="map" id="mapBox">
-      <p class="empty" id="mapEmpty">도시 데이터를 기다리는 중입니다. 시뮬레이션이 돌아가는 동안 게임 1년마다 지도와 수치가 새로 들어옵니다.</p>
+      <p class="empty" id="mapEmpty">도시 데이터를 기다리는 중입니다. 시뮬레이션이 1년을 마칠 때마다 그 1년이 한 달씩 재생됩니다.</p>
       <canvas id="map" hidden></canvas>
       <span class="stamp" id="stamp" hidden></span>
     </div>
@@ -192,17 +192,19 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
   const TAX = [200,150,120,100,80,50,30,0,-10,-40,-100,-150,-200,-250,-300,-350,-400,-450,-500,-550,-600];
   const nf = new Intl.NumberFormat("ko-KR");
   const atlas = new Image();
-  let atlasReady = false, last = null, box = null;
-  atlas.onload = () => { atlasReady = true; if (last) drawMap(last); };
+  let atlasReady = false, latest = null, box = null, curMap = null, mapW = 120, mapH = 100;
+  const queue = [];               // frames waiting to be shown, oldest first
+  let shownMonth = -1, lastArrival = 0, period = 45000, timer = null;
+  atlas.onload = () => { atlasReady = true; if (curMap) drawMap(curMap, null); };
   atlas.src = "tiles.png";
 
   const korDate = (d) => d ? `${d.slice(0, 4)}년 ${parseInt(d.slice(5), 10)}월` : "—";
+  const u16 = (b64) => { const s = atob(b64), a = new Uint16Array(s.length / 2); for (let i = 0; i < a.length; i++) a[i] = s.charCodeAt(2 * i) | (s.charCodeAt(2 * i + 1) << 8); return a; };
+  const u32 = (b64) => { const s = atob(b64), a = new Uint32Array(s.length / 4); for (let i = 0; i < a.length; i++) a[i] = (s.charCodeAt(4 * i) | (s.charCodeAt(4 * i + 1) << 8) | (s.charCodeAt(4 * i + 2) << 16) | (s.charCodeAt(4 * i + 3) << 24)) >>> 0; return a; };
 
-  function drawMap(s) {
-    if (!s.map || !atlasReady) return;
-    const { w, h, b64 } = s.map;
-    const bin = atob(b64), t = new Uint16Array(w * h);
-    for (let i = 0; i < w * h; i++) t[i] = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8);
+  function drawMap(t, label) {
+    if (!atlasReady) return;
+    const w = mapW, h = mapH;
     let x0 = w, y0 = h, x1 = -1, y1 = -1;
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (t[y * w + x] >= 44) {
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
@@ -212,17 +214,15 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     let nb = [Math.max(0, x0 - m), Math.max(0, y0 - m), Math.min(w - 1, x1 + m), Math.min(h - 1, y1 + m)];
     if (box) nb = [Math.min(box[0], nb[0]), Math.min(box[1], nb[1]), Math.max(box[2], nb[2]), Math.max(box[3], nb[3])];
     box = nb;
-    const bw = box[2] - box[0] + 1, bh = box[3] - box[1] + 1;
-    const c = $("map"), g = c.getContext("2d");
-    c.width = bw * 16; c.height = bh * 16;
+    const bw = box[2] - box[0] + 1, bh = box[3] - box[1] + 1, c = $("map"), g = c.getContext("2d");
+    if (c.width !== bw * 16 || c.height !== bh * 16) { c.width = bw * 16; c.height = bh * 16; }
     g.imageSmoothingEnabled = false;
     for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
       const id = t[(y + box[1]) * w + x + box[0]];
       g.drawImage(atlas, (id % 32) * 16, Math.floor(id / 32) * 16, 16, 16, x * 16, y * 16, 16, 16);
     }
     c.hidden = false; $("mapEmpty").hidden = true;
-    $("stamp").hidden = false;
-    $("stamp").textContent = `${korDate(s.date)} · 인구 ${nf.format(s.kpi.population)}`;
+    if (label) { $("stamp").hidden = false; $("stamp").textContent = label; }
   }
 
   function valve(id, v, max) {
@@ -232,9 +232,8 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     $(id + "t").textContent = (v > 0 ? "+" : "") + nf.format(Math.round(v));
   }
 
-  function chart(s) {
+  function chart(pop, total) {
     const svg = $("chart"), W = 640, H = 220, L = 48, R = 12, T = 12, B = 26;
-    const pop = s.series.population, total = s.months_total || 1536;
     const max = Math.max(1000, ...pop);
     const rough = max / 4, mag = Math.pow(10, Math.floor(Math.log10(rough))), norm = rough / mag;
     const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
@@ -259,38 +258,45 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     svg.innerHTML = out;
   }
 
-  function render(s) {
-    last = s;
-    const k = s.kpi, done = s.status === "finished";
-    const pct = Math.min(100, 100 * (s.month_index + 1) / (s.months_total || 1536));
-    $("gamedate").textContent = korDate(s.date);
+  // One game month on screen: map, date, population, funds, demand, labor balance, chart.
+  function showFrame(f) {
+    curMap = f.map; shownMonth = f.month;
+    const s = latest, total = s.months_total || 1536;
+    drawMap(f.map, `${korDate(f.date)} · 인구 ${nf.format(f.population)}`);
+    $("gamedate").textContent = korDate(f.date);
+    const pct = Math.min(100, 100 * (f.month + 1) / total);
     $("prog").style.width = pct.toFixed(1) + "%";
     $("progText").textContent = `${pct.toFixed(1)}% · 2027년 12월까지 128년`;
-    $("kPop").textContent = nf.format(k.population);
-    const p = s.series.population, prev = p.length > 12 ? p[p.length - 13] : null;
-    $("kPopD").innerHTML = prev == null ? "" : `<span class="${k.population >= prev ? "up" : "down"}">1년 전보다 ${k.population >= prev ? "+" : ""}${nf.format(k.population - prev)}</span>`;
-    $("kFunds").textContent = "$" + nf.format(k.funds);
+    $("kPop").textContent = nf.format(f.population);
+    const pop = s.series.population, prev = f.month >= 12 ? pop[f.month - 12] : null;
+    $("kPopD").innerHTML = prev == null ? "" : `<span class="${f.population >= prev ? "up" : "down"}">1년 전보다 ${f.population >= prev ? "+" : ""}${nf.format(f.population - prev)}</span>`;
+    $("kFunds").textContent = "$" + nf.format(f.funds);
+    $("kTax").textContent = f.tax + "%";
+    valve("vR", f.res_valve, 2000); valve("vC", f.com_valve, 1500); valve("vI", f.ind_valve, 1500);
+    const lb = f.labor_base, thr = (1 - TAX[Math.min(20, f.tax)] / 600) / 1.2;
+    $("lbv").textContent = lb.toFixed(2);
+    $("lbv").className = lb < thr ? "down" : "up";
+    $("needle").style.left = `calc(${(100 * Math.min(1.3, lb) / 1.3).toFixed(1)}% - 1px)`;
+    $("thr").style.left = (100 * thr / 1.3).toFixed(1) + "%";
+    $("thrText").textContent = `세율 ${f.tax}% 기준선 ${thr.toFixed(2)}`;
+    chart(pop.slice(0, f.month + 1), total);
+  }
+
+  // Everything that changes yearly: decisions, events, landmarks, footer.
+  function showPanels(s) {
+    const k = s.kpi;
     $("kFlow").innerHTML = `<span class="${k.cash_flow >= 0 ? "up" : "down"}">현금흐름 ${k.cash_flow >= 0 ? "+" : ""}${nf.format(k.cash_flow)}</span>`;
-    $("kTax").textContent = s.tax_rate + "%";
     $("kRci").textContent = `${nf.format(k.res_pop)} / ${nf.format(k.com_pop)} / ${nf.format(k.ind_pop)}`;
     $("specials").innerHTML = [["stadiums", "경기장"], ["seaports", "항구"], ["airports", "공항"]]
       .map(([key, name]) => `<span class="chip ${k[key] > 0 ? "on" : "off"}">${name} ${k[key] > 0 ? "있음" : "없음"}</span>`).join("")
       + (k.unpowered_zones > 0 ? `<span class="chip warn">정전 구역 ${k.unpowered_zones}</span>` : "")
       + (k.fire_tiles > 0 ? `<span class="chip warn">화재 ${k.fire_tiles}칸</span>` : "")
       + (k.flood_tiles > 0 ? `<span class="chip warn">홍수 ${k.flood_tiles}칸</span>` : "");
-    valve("vR", k.res_valve, 2000); valve("vC", k.com_valve, 1500); valve("vI", k.ind_valve, 1500);
-    const lb = k.labor_base ?? 0, thr = (1 - TAX[Math.min(20, s.tax_rate)] / 600) / 1.2;
-    $("lbv").textContent = lb.toFixed(2);
-    $("lbv").className = lb < thr ? "down" : "up";
-    $("needle").style.left = `calc(${(100 * Math.min(1.3, lb) / 1.3).toFixed(1)}% - 1px)`;
-    $("thr").style.left = (100 * thr / 1.3).toFixed(1) + "%";
-    $("thrText").textContent = `세율 ${s.tax_rate}% 기준선 ${thr.toFixed(2)}`;
     const r = s.reviews[s.reviews.length - 1];
     if (r) {
-      $("review").innerHTML = `<time>${korDate(r.date)}</time><ul>${r.reasoning.map((x) => `<li></li>`).join("")}</ul>`;
+      $("review").innerHTML = `<time>${korDate(r.date)}</time><ul>${r.reasoning.map(() => "<li></li>").join("")}</ul>`;
       $("review").querySelectorAll("li").forEach((li, i) => { li.textContent = r.reasoning[i]; });
-      const st = r.strategy, mix = st.zone_mix || {};
-      const pc = (v) => Math.round((v || 0) * 100);
+      const st = r.strategy, mix = st.zone_mix || {}, pc = (v) => Math.round((v || 0) * 100);
       $("strategy").innerHTML = [
         `세율 ${st.tax_rate}%`, `구역 비율 R${pc(mix.residential)} C${pc(mix.commercial)} I${pc(mix.industrial)}`,
         `예비금 $${nf.format(st.reserve_funds)}`, `월 ${st.max_builds_per_month}건`, `도로 ${st.road_funding}% · 경찰 ${st.police_funding}% · 소방 ${st.fire_funding}%`,
@@ -309,17 +315,57 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     }
     if (!s.events.length) log.innerHTML = `<li><time></time><span class="note">최근 3년 동안 건설 기록이 없습니다.</span></li>`;
     $("foot").textContent = `Claude Code가 시장입니다. 지금까지 전략 재검토 ${s.reviews_total}회, 정가 환산 $${s.llm_cost_usd}. `
-      + "게임 1년마다 실행 중인 시뮬레이션에서 지도와 수치를 받아 이 페이지가 바로 다시 그립니다. 매달의 건설은 코드가 합니다.";
-    chart(s); drawMap(s); tick();
+      + "시뮬레이션이 1년을 마칠 때마다 그 1년의 매달 지도와 수치를 받아, 다음 1년이 올 때까지 한 달씩 이어서 재생합니다. 매달의 건설은 코드가 합니다.";
+  }
+
+  function enqueue(s) {
+    const fr = s.frames;
+    if (!fr) return;
+    mapW = fr.w; mapH = fr.h;
+    let m = u16(fr.base);
+    const n = fr.dates.length;
+    for (let i = 0; i < n; i++) {
+      if (i > 0) {
+        m = m.slice();
+        const d = u32(fr.diffs[i - 1]);
+        for (let j = 0; j < d.length; j++) m[d[j] >>> 10] = d[j] & 1023;
+      }
+      const month = fr.start + i;
+      if (month <= shownMonth || queue.some((q) => q.month === month)) continue;
+      queue.push({ month, map: m, date: fr.dates[i], tax: fr.tax[i], population: fr.kpi.population[i], funds: fr.kpi.funds[i],
+        res_valve: fr.kpi.res_valve[i], com_valve: fr.kpi.com_valve[i], ind_valve: fr.kpi.ind_valve[i], labor_base: fr.kpi.labor_base[i] });
+    }
+  }
+
+  function play() {
+    clearTimeout(timer);
+    if (!queue.length) { timer = null; return; }
+    showFrame(queue.shift());
+    // spread what is queued over the expected time to the next year of data; catch up if behind
+    const delay = latest && latest.status === "finished" ? 600 : Math.max(250, Math.min(5000, period / Math.max(1, queue.length)));
+    timer = setTimeout(play, delay);
+  }
+
+  function onData(s) {
+    const now = Date.now();
+    if (lastArrival) period = Math.max(10000, Math.min(180000, 0.6 * period + 0.4 * (now - lastArrival)));
+    lastArrival = now;
+    const first = !latest;
+    latest = s;
+    showPanels(s);
+    enqueue(s);
+    if (first && queue.length > 1) queue.splice(0, queue.length - 12);   // joining late: start from the last year
+    if (!timer) play();
+    tick();
   }
 
   function tick() {
-    if (!last) return;
-    const ago = Math.max(0, Math.round((Date.now() - Date.parse(last.updated_at)) / 1000));
+    if (!latest) return;
+    const ago = Math.max(0, Math.round((Date.now() - Date.parse(latest.updated_at)) / 1000));
     const agoText = ago < 60 ? `${ago}초 전` : ago < 3600 ? `${Math.floor(ago / 60)}분 전` : `${Math.floor(ago / 3600)}시간 전`;
-    $("updated").textContent = `마지막 갱신 ${agoText}`;
+    $("updated").textContent = `새 데이터 ${agoText} · 약 1년 늦게 재생`;
     const live = $("live");
-    if (last.status === "finished") { live.dataset.state = "done"; $("liveText").textContent = "완료"; }
+    if (latest.status === "finished") { live.dataset.state = "done"; $("liveText").textContent = queue.length ? "다시 보기 중" : "완료"; }
     else if (ago < 300) { live.dataset.state = "live"; $("liveText").textContent = "LIVE"; }
     else { live.dataset.state = "wait"; $("liveText").textContent = "갱신 대기"; }
   }
@@ -330,7 +376,7 @@ footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
     if (!db) { $("liveText").textContent = "로그인하면 실시간 데이터가 보입니다"; return; }
     $("liveText").textContent = "대기";
     db.doc("live/state").onSnapshot((snap) => {
-      if (snap.exists) { try { render(snap.data()); } catch (e) { console.error(e); } }
+      if (snap.exists) { try { onData(snap.data()); } catch (e) { console.error(e); } }
     }, () => { $("live").dataset.state = "wait"; $("liveText").textContent = "연결 끊김 · 새로고침해 주세요"; });
   })();
 })();
