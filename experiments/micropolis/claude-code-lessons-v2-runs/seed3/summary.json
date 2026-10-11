@@ -1,0 +1,57 @@
+{
+  "date": "1920-01",
+  "stats": {
+    "funds": 0.0,
+    "population": 1400.0,
+    "res_valve": -2000.0,
+    "com_valve": -1500.0,
+    "ind_valve": -1500.0,
+    "city_tax": 7.0,
+    "cash_flow": -518.0,
+    "crime_avg": 46.0,
+    "pollution_avg": 44.0,
+    "land_value_avg": 74.0,
+    "traffic_avg": 4.0,
+    "city_score": 350.0,
+    "powered_zones": 63.0,
+    "unpowered_zones": 0.0,
+    "police_stations": 2.0,
+    "fire_stations": 2.0,
+    "coal_plants": 2.0,
+    "nuclear_plants": 0.0,
+    "road_total": 225.0,
+    "assessed_value": 11125000.0,
+    "res_pop": 6.0,
+    "com_pop": 2.0,
+    "ind_pop": 6.0,
+    "stadiums": 0.0,
+    "seaports": 0.0,
+    "airports": 0.0,
+    "road_effect": 32.0,
+    "police_effect": 1000.0,
+    "fire_effect": 1000.0
+  },
+  "planner": {
+    "residential": 39,
+    "commercial": 6,
+    "industrial": 12,
+    "police": 2,
+    "fire": 2,
+    "power_plants": [
+      "coal",
+      "coal"
+    ],
+    "free_slots": 665,
+    "blocked_slots": 0
+  },
+  "reviewer": "llm:claude-code/default",
+  "seed": 3,
+  "years": 20,
+  "llm_calls": 24,
+  "tokens": {
+    "input": 202919,
+    "output": 45172
+  },
+  "llm_cost_usd": 1.1339,
+  "llm_seconds": 458.8
+}
