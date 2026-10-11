@@ -131,13 +131,25 @@ def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_sinc
     # 1b. repair power lines (and roads, if repair_roads) that serve existing zones, lost to disasters
     #     or, for roads, to decay when road_funding < 100. Repair is upkeep, not a build: it does not
     #     use the monthly build budget. If it cannot be afforded, nothing new is built this month.
-    #     Lost zones free their slot and are rebuilt by step 4.
+    starved = False
     if damaged:
         r = planner.repair()
         if not r.skipped or "reserve" in r.detail:
             done.append(r)
-        if r.skipped and "reserve" in r.detail:
-            budget = 0
+        starved = r.skipped and "reserve" in r.detail
+    # 1c. put destroyed zones back in their own slots, regardless of demand (a burnt zone can cut
+    #     power to the zones beyond it, and unpowered zones have no demand). Also upkeep, not a build.
+    for _ in range(4):
+        if not planner.lost or starved:
+            break
+        r = planner.rebuild()
+        if not r.skipped or "reserve" in r.detail:
+            done.append(r)
+        starved = r.skipped and "reserve" in r.detail
+        if not r.ok:
+            break
+    if starved:
+        budget = 0
     # 2. special buildings: without them the engine holds that demand at 0 (see engine.demand_caps)
     if strategy.build_specials:
         for kind, capped in demand_caps(stats).items():

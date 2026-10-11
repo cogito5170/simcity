@@ -196,6 +196,26 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(64 <= (c.e.map_values[y, x] & 0x3FF) <= 206)
         self.assertTrue(Strategy.from_dict({"repair_roads": True})[0].repair_roads)
 
+    def test_destroyed_zone_is_rebuilt_in_its_own_slot_without_demand(self):
+        from mayor.micropolis.planner import Planner
+        from mayor.micropolis.strategy import execute_month
+        c = City(seed=1)
+        c.e.set_funds(100000)
+        p = Planner(c)
+        self.assertTrue(p.build_power("coal").ok)
+        r = p.place("residential")
+        slot = next(iter(p.used_slots))
+        cx, cy = r.where
+        for dx in (-1, 0, 1):                       # wipe the zone like a fire would
+            for dy in (-1, 0, 1):
+                c.tool(p.T.BULLDOZER, cx + dx, cy + dy)
+        self.assertEqual(p.audit()["zones_lost"], 1)
+        st = Strategy(max_builds_per_month=0)        # no new building at all, and no demand needed
+        done = execute_month(p, st, dict(c.stats(), res_valve=-2000, com_valve=-1500, ind_valve=-1500), 0)
+        self.assertIn("rebuild:residential", [a.action for a in done if a.ok])
+        self.assertEqual(p.used_slots.get(slot), "residential")
+        self.assertFalse(p.lost)
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 

@@ -139,6 +139,7 @@ class Planner:
                              "airport": (ox - 8, oy + 6, ox - 3, oy + 11)}
         self.bridge_x = ox - 3
         self.destroyed: list = []                     # (date-less) log of zones lost to disasters, for stats
+        self.lost: dict = {}                          # slot -> kind destroyed and not yet rebuilt
         self.T = self.city.Tool
         self.cost_of = {self.T.ROAD: 10, self.T.WIRE: 5, self.T.RESIDENTIAL: 100, self.T.COMMERCIAL: 100,
                         self.T.INDUSTRIAL: 100, self.T.POLICE_STATION: 500, self.T.FIRE_STATION: 500,
@@ -227,13 +228,13 @@ class Planner:
         return self.city.stats()["funds"] - need >= self.reserve, need
 
     # ------------------------------------------------------------ actions --
-    def place(self, kind: str) -> ActionResult:
-        """Put a zone or service building into the next free slot, with roads and power."""
+    def place(self, kind: str, at: tuple | None = None) -> ActionResult:
+        """Put a zone or service building into the next free slot (or slot `at`), with roads and power."""
         if kind not in self.kind_tool:
             return ActionResult(f"place:{kind}", False, detail="unknown kind")
         tiles = self.city.tiles()
         for _ in range(200):                                  # skip slots that would touch water
-            slot = self.next_slot(kind)
+            slot = at or self.next_slot(kind)
             if slot is None:
                 return ActionResult(f"place:{kind}", False, detail="map full")
             p, j, r = slot
@@ -242,6 +243,8 @@ class Planner:
             cells = [(x, y) for _, x, y in calls[:-1]] + [(cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)]
             if any(not (0 <= x < WORLD_W and 0 <= y < WORLD_H) or WATER[0] <= tiles[y, x] <= WATER[1]
                    for x, y in cells):
+                if at:
+                    return ActionResult(f"place:{kind}", False, detail="slot touches water now")
                 self.blocked.add(slot)
                 continue
             break
@@ -254,9 +257,25 @@ class Planner:
         ok, spent, why = self._run(calls)
         if ok:
             self.used_slots[slot] = kind
-        else:
+        elif at is None:          # a rebuild may just be early (tile still burning): try again later
             self.blocked.add(slot)
         return ActionResult(f"place:{kind}", ok, spent, why or f"slot p{p} c{j} r{r}", (cx, cy))
+
+    def rebuild(self) -> ActionResult:
+        """Put a destroyed zone/building back in its own slot, whatever the demand.
+
+        Zones pass power to touching zones, so a burnt-out zone can cut power to every zone
+        beyond it; unpowered zones have no demand, so waiting for demand would never fix it."""
+        for slot, kind in sorted(self.lost.items()):
+            if slot in self.used_slots or slot in self.blocked:
+                del self.lost[slot]
+                continue
+            r = self.place(kind, at=slot)
+            r.action = f"rebuild:{kind}"
+            if r.ok:
+                del self.lost[slot]
+            return r
+        return ActionResult("rebuild", False, detail="nothing to rebuild", skipped=True)
 
     def build_power(self, kind: str = "coal") -> ActionResult:
         tool = self.T.NUCLEAR_POWER if kind == "nuclear" else self.T.COAL_POWER
@@ -358,6 +377,7 @@ class Planner:
         for k in lost_specials:
             del self.specials[k]
         self.destroyed += [kind for _, kind in lost_slots]
+        self.lost.update(lost_slots)
         return {"zones_lost": len(lost_slots), "lost_kinds": [k for _, k in lost_slots], "roads_lost": len(lost_roads),
                 "wires_lost": len(lost_wires), "plants_lost": len(lost_plants), "specials_lost": lost_specials}
 
