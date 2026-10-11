@@ -14,6 +14,7 @@ class LLMBridge extends GSController {
 	function PassengerCargo();
 	function BuyBus(id, company, depot, stops, count);
 	function Vehicles(id, company);
+	function Stations(id, company);
 }
 
 function LLMBridge::Date() {
@@ -85,7 +86,11 @@ function LLMBridge::Handle(cmd) {
 			value = GSCompany.GetQuarterlyCompanyValue(c, GSCompany.CURRENT_QUARTER) });
 	} else if (op == "loan") {
 		local cm = GSCompanyMode(cmd.company);
-		GSAdmin.Send({ re = id, ok = GSCompany.SetMinimumLoanAmount(cmd.amount), loan = GSCompany.GetLoanAmount() });
+		local ok = GSCompany.SetLoanAmount(cmd.amount);
+		GSAdmin.Send({ re = id, ok = ok, error = ok ? "" : GSError.GetLastErrorString(), loan = GSCompany.GetLoanAmount(),
+			money = GSCompany.GetBankBalance(cmd.company) });
+	} else if (op == "stations") {
+		this.Stations(id, cmd.company);
 	} else {
 		GSAdmin.Send({ re = id, ok = false, error = "unknown op " + op });
 	}
@@ -227,5 +232,21 @@ function LLMBridge::Vehicles(id, company) {
 		if (part.len() == 10) { GSAdmin.Send({ re = id, part = n++, vehicles = part }); part = []; }
 	}
 	if (part.len() > 0) GSAdmin.Send({ re = id, part = n++, vehicles = part });
+	GSAdmin.Send({ re = id, done = true });
+}
+
+
+function LLMBridge::Stations(id, company) {
+	local cm = GSCompanyMode(company);
+	local pax = this.PassengerCargo();
+	local part = [], n = 0;
+	foreach (st, _ in GSStationList(GSStation.STATION_ANY)) {
+		local t = GSStation.GetLocation(st);
+		part.append({ id = st, name = GSStation.GetName(st), x = GSMap.GetTileX(t), y = GSMap.GetTileY(t),
+			waiting = GSStation.GetCargoWaiting(st, pax),
+			rating = GSStation.HasCargoRating(st, pax) ? GSStation.GetCargoRating(st, pax) : -1 });
+		if (part.len() == 10) { GSAdmin.Send({ re = id, part = n++, stations = part }); part = []; }
+	}
+	if (part.len() > 0) GSAdmin.Send({ re = id, part = n++, stations = part });
 	GSAdmin.Send({ re = id, done = true });
 }

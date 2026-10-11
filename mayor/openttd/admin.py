@@ -35,10 +35,12 @@ def _s(text: str) -> bytes:
 
 class Admin:
     def __init__(self, host: str = "127.0.0.1", port: int = 3977, password: str = "", name: str = "mayor",
-                 timeout: float = 30.0):
+                 timeout: float = 30.0, gamescript: bool = True):
         self.sock = socket.create_connection((host, port), timeout=timeout)
         self.buf = b""
         self.welcome: dict = {}
+        self.pending: list = []
+        self.gamescript = gamescript
         self._send(ADMIN_JOIN, _s(password) + _s(name) + _s("1.0"))
         while not self.welcome:
             t, body = self._recv()
@@ -46,9 +48,9 @@ class Admin:
                 self.welcome = self._parse_welcome(body)
             elif t in (SERVER_ERROR, SERVER_FULL, SERVER_BANNED):
                 raise AdminError(f"server refused admin login (packet {t}, code {body[:1].hex()})")
-        # GameScript JSON and console output arrive whenever they happen
-        self._send(ADMIN_UPDATE_FREQUENCY, struct.pack("<HH", UPDATE_GAMESCRIPT, FREQ_AUTOMATIC))
-        self._send(ADMIN_UPDATE_FREQUENCY, struct.pack("<HH", UPDATE_CONSOLE, FREQ_AUTOMATIC))
+        # GameScript JSON arrives whenever the script sends it (camera-only connections skip it)
+        if gamescript:
+            self._send(ADMIN_UPDATE_FREQUENCY, struct.pack("<HH", UPDATE_GAMESCRIPT, FREQ_AUTOMATIC))
 
     # ---------------------------------------------------------------- wire --
     def _send(self, ptype: int, payload: bytes = b""):
@@ -92,11 +94,9 @@ class Admin:
                 lines.append(self._strings(body[2:])[0])
             elif t == SERVER_RCON_END:
                 return lines
-            elif t == SERVER_GAMESCRIPT:
+            elif t == SERVER_GAMESCRIPT and self.gamescript:
                 self.pending.append(json.loads(self._strings(body)[0]))
         raise AdminError(f"rcon timed out: {command}")
-
-    pending: list = []
 
     def to_gs(self, data: dict):
         """Send a JSON object to the GameScript (it arrives there as a GSEventAdminPort)."""

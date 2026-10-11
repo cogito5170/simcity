@@ -1,0 +1,288 @@
+<title>Claude Transport 생중계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<style>
+/* Layout: a bus-company dispatch board. The live camera is the big screen; the CEO's latest order
+   and the route board sit beside it like a depot noticeboard; money runs underneath. Route chips use
+   transit-sign colours so a line keeps its colour everywhere on the page. */
+:root {
+  --bg: #edf0ee;
+  --panel: #fbfcfb;
+  --ink: #17201b;
+  --muted: #5b6862;
+  --line: #d3dbd6;
+  --accent: #2f9e44;       /* bus green */
+  --signal: #e8590c;       /* depot amber: live marker, warnings */
+  --good: #2b8a3e;
+  --bad: #c92a2a;
+  --screen: #0b0f0d;
+  --font-display: "Do Hyeon", "IBM Plex Sans KR", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1311; --panel: #161e1a; --ink: #e4ebe7; --muted: #94a39c; --line: #2a3530;
+    --accent: #51cf66; --signal: #ff8a3d; --good: #51cf66; --bad: #ff6b6b; --screen: #050706; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1311; --panel: #161e1a; --ink: #e4ebe7; --muted: #94a39c; --line: #2a3530;
+  --accent: #51cf66; --signal: #ff8a3d; --good: #51cf66; --bad: #ff6b6b; --screen: #050706; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 16px; }
+
+header.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px 24px; }
+.title { display: grid; gap: 2px; min-width: 0; }
+.eyebrow { font: 600 12px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font: 400 clamp(30px, 4.4vw, 44px)/1.05 var(--font-display); text-wrap: balance; }
+.clock { display: grid; justify-items: end; gap: 6px; }
+.gamedate { font: 400 clamp(26px, 4vw, 38px)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.live { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--font-data); letter-spacing: .06em; color: var(--muted); }
+.live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.live[data-state="live"] { color: var(--signal); }
+.live[data-state="live"] .dot { background: var(--signal); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .live .dot { animation: none !important; } }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; display: grid; gap: 2px; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.kpi b { font: 600 20px/1.2 var(--font-data); font-variant-numeric: tabular-nums; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.screen { background: var(--screen); border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 16 / 9; max-width: 100%; }
+.screen video { width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: pixelated; }
+.screen .wait { position: absolute; inset: 0; display: grid; place-items: center; color: #d8e2dc; text-align: center; padding: 24px; font-size: 14px; }
+.caption { position: absolute; left: 10px; top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  background: rgba(8, 10, 9, .74); color: #eef3f0; border-radius: 8px; padding: 6px 10px; font: 13px/1.3 var(--font-body); max-width: calc(100% - 20px); }
+.caption small { font: 12px var(--font-data); color: #b9c7bf; }
+
+.rail { display: grid; gap: 14px; min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.panel h2 { margin: 0; font: 600 12px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.review ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.orders { display: grid; gap: 6px; }
+.order { display: flex; gap: 8px; align-items: baseline; font-size: 14px; }
+.order .ok { color: var(--good); font-weight: 700; } .order .no { color: var(--bad); font-weight: 700; }
+.route { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 5px;
+  font: 600 12px/1 var(--font-data); color: #fff; }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 600 11px var(--font-data); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+td.num { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.up { color: var(--good); } .down { color: var(--bad); }
+
+.lower { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .lower { grid-template-columns: minmax(0, 1fr); } }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 11px var(--font-data); }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 3px; vertical-align: middle; margin-right: 6px; }
+.log ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 280px; overflow: auto; }
+.log li { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; font-size: 13px; }
+.log time { font: 12px var(--font-data); color: var(--muted); }
+.log li.fail { color: var(--bad); }
+footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <span class="eyebrow">OpenTTD 15.3 · 사장: Claude Code</span>
+      <h1>Claude Transport 생중계</h1>
+    </div>
+    <div class="clock">
+      <span class="live" id="live" data-state="wait"><span class="dot"></span><span id="liveText">연결 중</span></span>
+      <span class="gamedate" id="gamedate">—</span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><span>현금</span><b id="kMoney">—</b></div>
+    <div class="kpi"><span>대출</span><b id="kLoan">—</b></div>
+    <div class="kpi"><span>올해 운행 이익</span><b id="kProfit">—</b></div>
+    <div class="kpi"><span>노선 / 버스</span><b id="kFleet">—</b></div>
+  </div>
+
+  <div class="main">
+    <div class="screen">
+      <video id="vid" muted playsinline autoplay hidden></video>
+      <div class="wait" id="wait">첫 장면을 기다리는 중입니다. 서버가 90초 분량을 찍어 올리면 여기서 이어서 재생됩니다.</div>
+      <div class="caption" id="caption" hidden><span id="capLabel"></span><small id="capDate"></small></div>
+    </div>
+
+    <div class="rail">
+      <section class="panel review">
+        <h2>사장의 최근 결정</h2>
+        <div id="review"><p class="note">첫 결정을 기다리는 중입니다.</p></div>
+        <div class="orders" id="orders"></div>
+      </section>
+      <section class="panel">
+        <h2>검토한 후보 노선</h2>
+        <div class="tablewrap"><table><thead><tr><th>#</th><th>도시</th><th>거리</th><th>새 도로</th><th>예상 비용</th></tr></thead><tbody id="cands"><tr><td colspan="5" class="note">아직 없습니다.</td></tr></tbody></table></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>노선 현황</h2>
+    <div class="tablewrap"><table><thead><tr><th>노선</th><th>도시</th><th>개통</th><th>버스</th><th>올해 이익</th><th>대기 승객</th><th>정류장 평점</th></tr></thead><tbody id="lines"><tr><td colspan="7" class="note">아직 노선이 없습니다.</td></tr></tbody></table></div>
+  </section>
+
+  <div class="lower">
+    <section class="panel chart">
+      <h2>현금과 회사 가치</h2>
+      <svg id="chart" viewBox="0 0 640 220" role="img" aria-label="현금과 회사 가치 추이"></svg>
+      <div class="legend"><span><i style="background:var(--accent)"></i>현금</span><span><i style="background:var(--signal)"></i>회사 가치</span></div>
+    </section>
+    <section class="panel log">
+      <h2>최근 기록</h2>
+      <ol id="log"><li><time></time><span class="note">아직 기록이 없습니다.</span></li></ol>
+    </section>
+  </div>
+
+  <footer id="foot">Claude Code가 운송회사 사장입니다. 게임 2개월마다 회사 상황과 코드가 미리 계산한 후보 노선을 보고 결정하고, 실제 건설은 코드가 합니다. 화면은 서버에서 초당 3장씩 찍은 90초 영상을 이어 붙여 재생하므로 실제보다 2~3분 늦습니다.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const nf = new Intl.NumberFormat("ko-KR");
+  const ROUTE = ["#2f9e44", "#1971c2", "#e8590c", "#9c36b5", "#c2255c", "#0c8599", "#5c940d", "#e67700"];
+  const route = (id) => `<span class="route" style="background:${ROUTE[(id - 1) % ROUTE.length]}">${id}</span>`;
+  const money = (v) => (v < 0 ? "-£" : "£") + nf.format(Math.abs(Math.round(v || 0)));
+  const korDate = (d) => d ? `${d.slice(0, 4)}년 ${parseInt(d.slice(5, 7), 10)}월 ${parseInt(d.slice(8, 10), 10)}일` : "—";
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  // ---------------------------------------------------------------- video
+  const parts = new Map();   // seq -> {meta, chunks[]}
+  const ready = [];          // complete segments not yet played, ascending seq
+  let played = 0, playing = null, lastState = null;
+  const vid = $("vid");
+
+  function addPart(d) {
+    let e = parts.get(d.seq);
+    if (!e) { e = { meta: d, chunks: new Array(d.parts) }; parts.set(d.seq, e); }
+    e.chunks[d.part] = d.b64;
+    if (e.chunks.every((c) => typeof c === "string") && !e.done) {
+      e.done = true;
+      if (d.seq > played && !ready.some((r) => r.seq === d.seq)) {
+        const bin = atob(e.chunks.join("")), buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        ready.push({ seq: d.seq, meta: d, url: URL.createObjectURL(new Blob([buf], { type: "video/mp4" })) });
+        ready.sort((a, b) => a.seq - b.seq);
+      }
+      e.chunks = null;
+    }
+  }
+
+  function playNext() {
+    if (playing && !vid.ended && !vid.paused) return;
+    if (!ready.length) { if (playing) { $("wait").hidden = false; $("wait").textContent = "다음 장면을 준비하는 중입니다 (90초마다 새 장면)."; } return; }
+    if (!playing && ready.length > 2) ready.splice(0, ready.length - 2);   // joining late: start near the newest
+    const seg = ready.shift();
+    if (playing) URL.revokeObjectURL(playing.url);
+    playing = seg; played = seg.seq;
+    vid.src = seg.url; vid.hidden = false; $("wait").hidden = true;
+    vid.play().catch(() => {});
+    $("caption").hidden = false;
+    $("capLabel").textContent = seg.meta.label || "";
+    $("capDate").textContent = seg.meta.game_from ? `${seg.meta.game_from} → ${seg.meta.game_to}` : "";
+  }
+  vid.addEventListener("ended", playNext);
+
+  // ---------------------------------------------------------------- state
+  function chart(hist) {
+    const svg = $("chart"), W = 640, H = 220, L = 56, R = 12, T = 12, B = 26;
+    if (!hist || hist.length < 2) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle">기록이 쌓이면 그래프가 그려집니다</text>`; return; }
+    const ys = hist.flatMap((h) => [h.money, h.value || 0]);
+    let lo = Math.min(0, ...ys), hi = Math.max(1, ...ys);
+    const rough = (hi - lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(rough))), n = rough / mag;
+    const step = (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * mag;
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    const X = (i) => L + (W - L - R) * i / (hist.length - 1), Y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    let out = "";
+    for (let v = lo; v <= hi + 1e-9; v += step) {
+      out += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+      out += `<text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${Math.abs(v) >= 1000 ? "£" + nf.format(v / 1000) + "k" : "£" + v}</text>`;
+    }
+    out += `<text x="${L}" y="${H - 8}">${hist[0].date.slice(0, 7)}</text><text x="${W - R}" y="${H - 8}" text-anchor="end">${hist[hist.length - 1].date.slice(0, 7)}</text>`;
+    for (const [key, col] of [["value", "var(--signal)"], ["money", "var(--accent)"]]) {
+      const pts = hist.map((h, i) => `${X(i).toFixed(1)},${Y(h[key] || 0).toFixed(1)}`).join(" ");
+      out += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8"/>`;
+      const last = hist[hist.length - 1];
+      out += `<circle cx="${X(hist.length - 1)}" cy="${Y(last[key] || 0)}" r="3.5" fill="${col}"/>`;
+    }
+    svg.innerHTML = out;
+  }
+
+  function render(s) {
+    lastState = s;
+    const o = s.obs || {};
+    $("gamedate").textContent = korDate(o.date);
+    $("kMoney").textContent = money(o.money);
+    $("kLoan").textContent = money(o.loan);
+    const profit = (o.lines || []).reduce((a, l) => a + l.profit_this_year, 0);
+    $("kProfit").innerHTML = `<span class="${profit >= 0 ? "up" : "down"}">${money(profit)}</span>`;
+    $("kFleet").textContent = `${(o.lines || []).length} / ${o.vehicles ?? 0}`;
+    const lr = s.last_review;
+    if (lr) {
+      $("review").innerHTML = `<p class="note">${esc(korDate(lr.date))} · ${esc(lr.source || "")}</p><ul>${(lr.reasoning || []).map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`;
+      const acts = lr.actions || [], res = lr.results || [];
+      $("orders").innerHTML = acts.length ? acts.map((a, i) => {
+        const r = res[i] || {}, mark = r.ok ? `<span class="ok">✓</span>` : `<span class="no">✗</span>`;
+        const text = a.type === "new_line" ? `후보 ${a.candidate} 개통, 버스 ${a.buses}대` : a.type === "add_buses" ? `노선 ${a.line}에 버스 ${a.n}대 추가`
+          : a.type === "set_loan" ? `대출 ${money(a.amount)}로 조정` : esc(a.type);
+        return `<div class="order">${mark}<span>${text}${r.cost ? ` · ${money(r.cost)}` : ""}${r.error ? ` · ${esc(r.error)}` : ""}</span></div>`;
+      }).join("") : `<p class="note">이번에는 기다리기로 했습니다.</p>`;
+      $("cands").innerHTML = (lr.candidates || []).map((c) => `<tr><td>${c.id}</td><td>${esc(c.a)} – ${esc(c.b)}</td><td class="num">${c.distance}</td><td class="num">${c.new_road_tiles}</td><td class="num">${money(c.est_cost_2_buses)}</td></tr>`).join("")
+        || `<tr><td colspan="5" class="note">후보가 없습니다.</td></tr>`;
+    }
+    $("lines").innerHTML = (o.lines || []).map((l) => `<tr><td>${route(l.id)}</td><td>${esc(l.towns)}</td><td>${esc(l.built)}</td><td class="num">${l.buses}</td>`
+      + `<td class="num ${l.profit_this_year >= 0 ? "up" : "down"}">${money(l.profit_this_year)}</td><td class="num">${(l.waiting || []).join(" / ")}</td>`
+      + `<td class="num">${(l.rating || []).map((r) => r < 0 ? "—" : r + "%").join(" / ")}</td></tr>`).join("")
+      || `<tr><td colspan="7" class="note">아직 노선이 없습니다.</td></tr>`;
+    const log = $("log"); log.innerHTML = "";
+    for (const e of s.events || []) {
+      const li = document.createElement("li"); if (e.kind === "fail") li.className = "fail";
+      const t = document.createElement("time"); t.textContent = e.date;
+      const sp = document.createElement("span"); sp.textContent = e.text;
+      li.append(t, sp); log.append(li);
+    }
+    if (!(s.events || []).length) log.innerHTML = `<li><time></time><span class="note">아직 기록이 없습니다.</span></li>`;
+    $("foot").textContent = `Claude Code가 운송회사 사장입니다 (결정 ${s.reviews_total}회). 게임 2개월마다 회사 상황과 코드가 미리 계산한 후보 노선을 보고 결정하고, 실제 건설은 코드가 합니다. `
+      + "화면은 서버에서 초당 3장씩 찍은 90초 영상을 이어 붙여 재생하므로 실제보다 2~3분 늦습니다.";
+    chart(s.history);
+    tick();
+  }
+
+  function tick() {
+    if (!lastState) return;
+    const ago = Math.max(0, Math.round((Date.now() - Date.parse(lastState.updated_at)) / 1000));
+    const live = $("live");
+    if (ago < 360) { live.dataset.state = "live"; $("liveText").textContent = `LIVE · ${ago < 60 ? ago + "초" : Math.floor(ago / 60) + "분"} 전 갱신`; }
+    else { live.dataset.state = "wait"; $("liveText").textContent = "갱신 대기"; }
+  }
+  setInterval(tick, 5000);
+
+  (async () => {
+    const db = window.claude ? await window.claude.use("db") : null;
+    if (!db) { $("liveText").textContent = "로그인하면 생중계가 보입니다"; return; }
+    $("liveText").textContent = "대기";
+    db.doc("live/state").onSnapshot((snap) => { if (snap.exists) { try { render(snap.data()); } catch (e) { console.error(e); } } },
+      () => { $("liveText").textContent = "연결 끊김 · 새로고침해 주세요"; });
+    db.collection("seg").onSnapshot((snap) => {
+      for (const ch of snap.docChanges()) if (ch.type !== "removed" && ch.doc.exists) { try { addPart(ch.doc.data()); } catch (e) { console.error(e); } }
+      playNext();
+    }, () => { $("liveText").textContent = "영상 연결 끊김 · 새로고침해 주세요"; });
+  })();
+})();
+</script>

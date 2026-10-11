@@ -54,6 +54,9 @@ class Game:
     def company_info(self) -> dict:
         return self.call("company", company=self.company)
 
+    def stations(self) -> list[dict]:
+        return [s for p in self.call("stations", company=self.company)["parts"] for s in p["stations"]]
+
     def map_rect(self, x0: int, y0: int, w: int, h: int) -> dict[tuple[int, int], str]:
         rows = self.call("map", timeout=600, x0=x0, y0=y0, w=w, h=h)["parts"]
         return {(x0 + i, r["y"]): c for r in rows for i, c in enumerate(r["row"])}
@@ -74,6 +77,10 @@ class Game:
 
     def depot(self, x: int, y: int) -> dict:
         return self.call("depot", company=self.company, x=x, y=y)
+
+    def set_loan(self, amount: int) -> dict:
+        """Loan goes in steps of 10,000 (GetLoanInterval in a default game)."""
+        return self.call("loan", company=self.company, amount=int(round(amount / 10000)) * 10000)
 
     def buy_bus(self, depot: tuple[int, int], stops: list[tuple[int, int]], count: int) -> dict:
         return self.call("buy_bus", company=self.company, depot=list(depot), stops=[list(s) for s in stops], count=count)
