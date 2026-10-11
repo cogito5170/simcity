@@ -93,12 +93,13 @@ class GameDate:
 class City:
     """One headless city. All values are read from the engine, nothing is estimated here."""
 
-    def __init__(self, seed: int = 0, engine_dir_path: str | None = None, disasters: bool = False):
+    def __init__(self, seed: int = 0, engine_dir_path: str | None = None, disasters: bool = False,
+                 terrain: bool = False):
         self.eng, self.tiles_mod = load_modules(engine_dir_path)
         self.Tool = self.eng.Tool
         self.OK = self.eng.ToolResult.OK
         self.e = self.eng.GymtropolisEngine()
-        self.e.new_city(seed=seed, blank=True)
+        self.e.new_city(seed=seed, blank=not terrain)   # terrain: generated rivers, lakes and forests
         self.e.seed(seed)
         self.e.set_disasters(disasters)
         self.e.set_auto_budget(True)
@@ -147,6 +148,10 @@ class City:
         s = self.e.stats()
         out = {k: float(s[k]) for k in STAT_KEYS}
         out.update(self.budget())   # yearly funds/needs and current funding shares (exact engine values)
+        lo = self.e.map_values & 0x03FF   # disaster traces on the map, counted by code
+        out["fire_tiles"] = float(((lo >= 56) & (lo <= 63)).sum())
+        out["flood_tiles"] = float(((lo >= 48) & (lo <= 51)).sum())
+        out["rubble_tiles"] = float(((lo >= 44) & (lo <= 47)).sum())
         return out
 
     def tiles(self):

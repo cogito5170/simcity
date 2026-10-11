@@ -21,9 +21,9 @@ def _font(size: int):
     return ImageFont.load_default(size=size)
 
 
-def crop_box(tiles: np.ndarray, margin: int = 3) -> tuple[int, int, int, int]:
+def crop_box(tiles: np.ndarray, margin: int = 5) -> tuple[int, int, int, int]:
     """Smallest box (y0, y1, x0, x1) holding every non-dirt tile of any frame, plus a margin."""
-    used = np.any(np.asarray(tiles) != 0, axis=0)
+    used = np.any(np.asarray(tiles) >= 44, axis=0)   # rubble/flood/fire/roads/power/buildings, not dirt/water/trees
     if not used.any():
         h, w = used.shape
         return 0, h, 0, w

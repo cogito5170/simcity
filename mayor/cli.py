@@ -327,7 +327,8 @@ def cmd_micropolis(cfg, args) -> int:
                   + ("  [review]" if m["reviewed"] else ""), flush=True)
     try:
         res = run_mayor(years=args.years, seed=args.seed, reviewer=reviewer, review_every=args.review_every,
-                        out_dir=Path(cfg["runs_dir"]), engine_dir=args.engine_dir, on_month=show)
+                        out_dir=Path(cfg["runs_dir"]), engine_dir=args.engine_dir, on_month=show,
+                        terrain=args.terrain, disasters=args.disasters)
     except EngineNotFound as e:
         print(e)
         return 1
@@ -429,6 +430,8 @@ def main(argv=None) -> int:
     mp.add_argument("--engine-dir", help="gymtropolis checkout (default: third_party/gymtropolis)")
     mp.add_argument("--report-only", metavar="RUN_DIR", help="rebuild video/report for an existing run")
     mp.add_argument("--lessons", metavar="FILE", help="lessons JSON from `lessons` (LLM reviewer only)")
+    mp.add_argument("--terrain", action="store_true", help="generated map with rivers, lakes and forests")
+    mp.add_argument("--disasters", action="store_true", help="fires, floods, tornadoes... (engine random disasters)")
     ls = sub.add_parser("lessons", help="build a lessons file from past Micropolis runs (+ benchmarks, reflections)")
     ls.add_argument("runs", nargs="+", help="past run directories")
     ls.add_argument("--bench-seeds", type=int, nargs="+", default=[9, 10, 11, 12, 13, 14, 15, 16])

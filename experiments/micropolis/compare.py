@@ -38,9 +38,9 @@ def summarize(months, reviews):
             "hit": statistics.mean(scores) if scores else None, "reviews": len(reviews)}
 
 
-def run_baseline(make_reviewer, seed, years):
+def run_baseline(make_reviewer, seed, years, terrain=False, disasters=False):
     with tempfile.TemporaryDirectory() as d:
-        r = run_mayor(years=years, seed=seed, reviewer=make_reviewer(), out_dir=d)
+        r = run_mayor(years=years, seed=seed, reviewer=make_reviewer(), out_dir=d, terrain=terrain, disasters=disasters)
         return summarize(r.months, [x.to_dict() for x in r.reviews])
 
 
@@ -55,6 +55,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3, 4])
     ap.add_argument("--years", type=int, default=20)
+    ap.add_argument("--terrain", action="store_true")
+    ap.add_argument("--disasters", action="store_true")
     ap.add_argument("--llm", nargs="+", action="append", default=[], metavar=("LABEL", "RUN_DIR"),
                     help="a label followed by run directories; repeat for several groups")
     a = ap.parse_args()
@@ -71,13 +73,15 @@ def main():
                 zone_mix={"residential": 0.7, "commercial": 0.15, "industrial": 0.15},
                 road_spacing=6, road_funding=50,
                 police_funding=50, fire_funding=100))}
-    table = {name: {s: run_baseline(mk, s, a.years) for s in a.seeds} for name, mk in rows.items()}
+    table = {name: {s: run_baseline(mk, s, a.years, a.terrain, a.disasters) for s in a.seeds}
+             for name, mk in rows.items()}
     usage = {}
     for label, *dirs in a.llm:
         group, calls, toks, cost = {}, [], [], []
         for p in dirs:
             seed, years, summ, raw = load_run(Path(p))
-            if seed in a.seeds and years == a.years:
+            if (seed in a.seeds and years == a.years and bool(raw.get("terrain")) == a.terrain
+                    and bool(raw.get("disasters")) == a.disasters):
                 group[seed] = summ
                 calls.append(raw.get("llm_calls") or 0)
                 toks.append((raw.get("tokens") or {}).get("input", 0) + (raw.get("tokens") or {}).get("output", 0))

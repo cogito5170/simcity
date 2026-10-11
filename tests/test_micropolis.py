@@ -144,6 +144,24 @@ class EngineTests(unittest.TestCase):
             c.advance_month()
         self.assertEqual(c.stats()["unpowered_zones"], 0)   # wire crossings follow the spacing
 
+    def test_terrain_origin_water_and_audit(self):
+        import numpy as np
+        from mayor.micropolis.planner import WATER, Planner, choose_origin
+        c = City(seed=17, terrain=True)
+        t = c.tiles()
+        self.assertGreater(((t >= WATER[0]) & (t <= WATER[1])).mean(), 0.1)   # really a terrain map
+        ox, oy, _ = choose_origin(t)
+        c.e.set_funds(200000)
+        p = Planner(c, ox=ox, oy=oy)
+        self.assertTrue(p.build_power("coal").ok)
+        placed = [p.place("residential") for _ in range(20)]
+        self.assertTrue(all(r.ok for r in placed))                    # water slots are skipped, not failed
+        for _ in range(14):                                           # traffic animates road/power crossings
+            c.advance_month()
+            d = p.audit()
+            self.assertEqual((d["wires_lost"], d["zones_lost"]), (0, 0))
+        self.assertEqual(choose_origin(np.zeros((100, 120), dtype=int))[:2], (14, 14))   # blank map: default
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 

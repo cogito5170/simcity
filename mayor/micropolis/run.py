@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from .engine import City
-from .planner import Planner, slot_order
+from .planner import Planner, choose_origin, slot_order
 from .review import Review, ReviewContext, RuleReviewer, evaluate
 from .strategy import Strategy, execute_month
 
@@ -31,15 +31,20 @@ def _alerts(stats: dict, prev: dict | None) -> list[str]:
         out.append("funds dropped below 1000")
     if prev and prev["population"] > 2000 and stats["population"] < prev["population"] * 0.9:
         out.append("population fell more than 10% in a month")
+    if stats.get("zones_lost_this_month", 0) >= 2 or stats.get("fire_tiles", 0) >= 20:
+        out.append(f"disaster damage: {stats.get('zones_lost_this_month', 0):.0f} zones lost, "
+                   f"{stats.get('fire_tiles', 0):.0f} tiles burning")
     return out
 
 
 def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int = 12, out_dir: str | Path = "runs",
-              engine_dir: str | None = None, start_funds: int | None = None, on_month=None) -> RunResult:
-    city = City(seed=seed, engine_dir_path=engine_dir)
+              engine_dir: str | None = None, start_funds: int | None = None, on_month=None,
+              terrain: bool = False, disasters: bool = False) -> RunResult:
+    city = City(seed=seed, engine_dir_path=engine_dir, terrain=terrain, disasters=disasters)
     if start_funds is not None:
         city.e.set_funds(start_funds)
-    planner = Planner(city)
+    ox, oy, water_in_core = choose_origin(city.tiles()) if terrain else (None, None, 0)
+    planner = Planner(city, ox=ox, oy=oy) if terrain else Planner(city)
     reviewer = reviewer or RuleReviewer()
     strategy = Strategy()
     base = Path(out_dir) / f"micropolis-{datetime.now().strftime('%Y%m%d-%H%M%S')}-s{seed}"
@@ -57,7 +62,10 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
     (run_dir / "saves").mkdir(exist_ok=True)
 
     for m in range(years * 12):
+        damage = planner.audit()      # disasters: what we built and no longer exists
         stats = city.stats()
+        stats["zones_lost_this_month"] = float(damage["zones_lost"])
+        stats["roads_lost_this_month"] = float(damage["roads_lost"] + damage["wires_lost"])
         date = str(city.date)
         prev = months[-1]["stats"] if months else None
         alerts = _alerts(stats, prev)
@@ -77,10 +85,13 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
                 f.write(json.dumps(rv.to_dict(), ensure_ascii=False) + "\n")
 
         unpowered_streak = unpowered_streak + 1 if stats["unpowered_zones"] > 0 else 0
-        actions = execute_month(planner, strategy, stats, months_since_power, unpowered_streak)
+        actions = execute_month(planner, strategy, stats, months_since_power, unpowered_streak,
+                                damaged=planner.needs_repair())
         months_since_power = 0 if any(a.action.startswith("power") and a.ok for a in actions) else months_since_power + 1
         failures += [f"{date} {a.action}: {a.detail}" for a in actions if a.status == "failed"]
-        rec = {"month": m, "date": date, "stats": stats, "alerts": alerts, "reviewed": bool(due),
+        rec_damage = damage if (damage["zones_lost"] or damage["plants_lost"] or damage["specials_lost"]
+                                 or damage["roads_lost"] or damage["wires_lost"]) else None
+        rec = {"month": m, "date": date, "stats": stats, "alerts": alerts, "reviewed": bool(due), "damage": rec_damage,
                "actions": [a.to_dict() for a in actions], "tax_rate": strategy.tax_rate}
         months.append(rec)
         with open(run_dir / "months.jsonl", "a", encoding="utf-8") as f:
@@ -95,6 +106,7 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
     city.save(run_dir / "saves" / "final.cty")
     final = {"date": str(city.date), "stats": city.stats(), "planner": planner_summary(planner),
              "reviewer": getattr(reviewer, "name", "rules"), "seed": seed, "years": years,
+             "terrain": terrain, "disasters": disasters,
              "llm_calls": sum(1 for r in reviews if r.usage),
              "tokens": {"input": sum((r.usage or {}).get("input_tokens") or 0 for r in reviews),
                         "output": sum((r.usage or {}).get("output_tokens") or 0 for r in reviews)},
@@ -106,8 +118,10 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
 
 
 def planner_summary(p: Planner) -> dict:
-    free = sum(1 for s in slot_order(conn_every=p.conn_every) if s not in p.used_slots and s not in p.blocked)
+    free = sum(1 for s in slot_order(conn_every=p.conn_every, ox=p.ox, oy=p.oy)
+               if s not in p.used_slots and s not in p.blocked)
     return {"residential": p.count("residential"), "commercial": p.count("commercial"),
             "industrial": p.count("industrial"), "police": p.count("police"), "fire": p.count("fire"),
             "power_plants": [k for _, _, k in p.plants], "free_slots": free, "blocked_slots": len(p.blocked),
-            "road_spacing": p.conn_every, "road_spacing_locked": bool(p.used_slots)}
+            "road_spacing": p.conn_every, "road_spacing_locked": bool(p.used_slots),
+            "origin": [p.ox, p.oy], "zones_lost_to_disasters": len(p.destroyed)}

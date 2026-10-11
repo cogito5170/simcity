@@ -107,7 +107,7 @@ def choose_zone(strategy: Strategy, stats: dict, counts: dict | None = None) -> 
 
 
 def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_since_power: int,
-                  unpowered_streak: int = 0) -> list[ActionResult]:
+                  unpowered_streak: int = 0, damaged: bool = False) -> list[ActionResult]:
     """One month of routine work. Every build is verified by the planner."""
     city = planner.city
     city.set_tax(strategy.tax_rate)
@@ -125,6 +125,13 @@ def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_sinc
     if need_power and budget > 0:
         done.append(planner.build_power(strategy.power_type))
         budget -= 1
+    # 1b. disaster repair: roads/power lines that served existing zones (lost zones simply
+    #     free their slot and are rebuilt by step 4 as demand allows)
+    if damaged and budget > 0:
+        r = planner.repair()
+        if not r.skipped or "reserve" in r.detail:
+            done.append(r)
+            budget -= 1
     # 2. special buildings: without them the engine holds that demand at 0 (see engine.demand_caps)
     if strategy.build_specials:
         for kind, capped in demand_caps(stats).items():

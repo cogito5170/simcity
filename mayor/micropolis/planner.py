@@ -54,19 +54,60 @@ class ActionResult:
                 "detail": self.detail, "where": list(self.where) if self.where else None}
 
 
-def slot_x(j: int, conn_every: int = CONN_EVERY) -> int:
-    return OX + 3 * j + (j // conn_every)
+WORLD_W, WORLD_H = 120, 100
+WATER = (2, 20)          # tile ids RIVER..LASTRIVEDGE: roads and zones cannot be placed there
 
 
-def slot_order(max_cols: int = 33, conn_every: int = CONN_EVERY):
+def slot_x(j: int, conn_every: int = CONN_EVERY, ox: int = OX) -> int:
+    return ox + 3 * j + (j // conn_every)
+
+
+def max_pairs(oy: int = OY) -> int:
+    """Row pairs whose bottom road still fits on the map."""
+    return max(0, min(MAX_PAIRS, (WORLD_H - 2 - oy) // PERIOD))
+
+
+def slot_order(max_cols: int = 33, conn_every: int = CONN_EVERY, ox: int = OX, oy: int = OY):
     """Fill compactly: 12 columns of every row pair, then the next 12 columns."""
     for b0 in range(0, max_cols, BLOCK_COLS):
-        for p in range(MAX_PAIRS):
+        for p in range(max_pairs(oy)):
             for j in range(b0, min(b0 + BLOCK_COLS, max_cols)):
-                if slot_x(j, conn_every) + 2 > 117:
+                if slot_x(j, conn_every, ox) + 2 > WORLD_W - 3:
                     continue
                 for r in ROW_CENTERS:
                     yield (p, j, r)
+
+
+def choose_origin(tiles, pairs: int = 4, cols: int = 12) -> tuple[int, int, int]:
+    """Origin (ox, oy) whose plant area and first `pairs` x `cols` block hold the least water.
+
+    Returns (ox, oy, water_tiles). On a blank map this is the default (OX, OY)."""
+    import numpy as np
+    t = np.asarray(tiles)
+    water = ((t >= WATER[0]) & (t <= WATER[1])).astype(np.int32)
+    trees = ((t >= 21) & (t <= 43)).astype(np.int32)
+    integ = water.cumsum(0).cumsum(1)
+    tinteg = trees.cumsum(0).cumsum(1)
+
+    def box(a, x0, y0, x1, y1):   # inclusive sum via the integral image
+        v = a[y1, x1]
+        if x0 > 0:
+            v -= a[y1, x0 - 1]
+        if y0 > 0:
+            v -= a[y0 - 1, x1]
+        if x0 > 0 and y0 > 0:
+            v += a[y0 - 1, x0 - 1]
+        return int(v)
+
+    best = None
+    width = 3 * cols + cols // CONN_EVERY + 2
+    for oy in range(12, WORLD_H - PERIOD * pairs - 2):
+        for ox in range(13, WORLD_W - width - 3):
+            x0, y0, x1, y1 = ox - 12, oy - 11, ox + width, oy + PERIOD * pairs
+            score = (box(integ, x0, y0, x1, y1), box(tinteg, x0, y0, x1, y1), abs(ox - OX) + abs(oy - OY))
+            if best is None or score < best[0]:
+                best = (score, ox, oy)
+    return best[1], best[2], best[0][0]
 
 
 @dataclass
@@ -80,8 +121,17 @@ class Planner:
     blocked: set = field(default_factory=set)
     districts: bool = False                          # separate industrial district (see next_slot)
     conn_every: int = CONN_EVERY                     # connector road after every N slots; fixed once building starts
+    ox: int = OX                                     # layout origin (see choose_origin for terrain maps)
+    oy: int = OY
 
     def __post_init__(self):
+        ox, oy = self.ox, self.oy
+        self.plant_slots = [(ox - 3 - 4 * k, oy - 5 - 4 * m) for m in range(2) for k in range(3)]
+        self.special_slots = {"stadium": (ox - 5, oy - 1), "seaport": (ox - 5, oy + 3), "airport": (ox - 7, oy + 7)}
+        self.special_foot = {"stadium": (ox - 6, oy - 2, ox - 3, oy + 1), "seaport": (ox - 6, oy + 2, ox - 3, oy + 5),
+                             "airport": (ox - 8, oy + 6, ox - 3, oy + 11)}
+        self.bridge_x = ox - 3
+        self.destroyed: list = []                     # (date-less) log of zones lost to disasters, for stats
         self.T = self.city.Tool
         self.cost_of = {self.T.ROAD: 10, self.T.WIRE: 5, self.T.RESIDENTIAL: 100, self.T.COMMERCIAL: 100,
                         self.T.INDUSTRIAL: 100, self.T.POLICE_STATION: 500, self.T.FIRE_STATION: 500,
@@ -109,10 +159,10 @@ class Planner:
             return s not in self.used_slots and s not in self.blocked
         if self.districts and kind is not None:
             want_ind = kind == "industrial"
-            for s in slot_order(conn_every=self.conn_every):
+            for s in slot_order(conn_every=self.conn_every, ox=self.ox, oy=self.oy):
                 if free(s) and (s[0] >= IND_PAIR_START) == want_ind:
                     return s
-        for s in slot_order(conn_every=self.conn_every):
+        for s in slot_order(conn_every=self.conn_every, ox=self.ox, oy=self.oy):
             if free(s):
                 return s
         return None
@@ -121,27 +171,28 @@ class Planner:
     def _infra_for(self, p: int, j: int) -> list[tuple]:
         """Tool calls (tool, x, y) still missing so that slot (p, j) has road + power."""
         T = self.T
-        y_top, y_bot = OY + PERIOD * p, OY + PERIOD * (p + 1)
-        x_end = slot_x(j, self.conn_every) + 2
+        ox, oy = self.ox, self.oy
+        y_top, y_bot = oy + PERIOD * p, oy + PERIOD * (p + 1)
+        x_end = slot_x(j, self.conn_every, ox) + 2
         roads, wires = [], []
         for y in (y_top, y_bot):
-            for x in range(OX - 2, x_end + 1):
+            for x in range(ox - 2, x_end + 1):
                 if (x, y) not in self.roads:
                     roads.append((T.ROAD, x, y))
-        for y in range(OY, y_bot + 1):                       # vertical road
-            if (OX - 2, y) not in self.roads:
-                roads.append((T.ROAD, OX - 2, y))
+        for y in range(oy, y_bot + 1):                       # vertical road
+            if (ox - 2, y) not in self.roads:
+                roads.append((T.ROAD, ox - 2, y))
         for c in range(self.conn_every, j + 1, self.conn_every):   # connector columns up to j
-            cx = slot_x(c, self.conn_every) - 1
+            cx = slot_x(c, self.conn_every, ox) - 1
             for y in range(y_top, y_bot + 1):
                 if (cx, y) not in self.roads:
                     roads.append((T.ROAD, cx, y))
             for r in ROW_CENTERS:
                 if (cx, y_top + r) not in self.wires:
                     wires.append((T.WIRE, cx, y_top + r))
-        for y in range(OY - 2, y_bot):                       # power spine (crosses the roads)
-            if (OX - 1, y) not in self.wires:
-                wires.append((T.WIRE, OX - 1, y))
+        for y in range(oy - 2, y_bot):                       # power spine (crosses the roads)
+            if (ox - 1, y) not in self.wires:
+                wires.append((T.WIRE, ox - 1, y))
         # dedupe while keeping order: roads first, then wires over them
         seen, out = set(), []
         for c in roads + wires:
@@ -173,12 +224,22 @@ class Planner:
         """Put a zone or service building into the next free slot, with roads and power."""
         if kind not in self.kind_tool:
             return ActionResult(f"place:{kind}", False, detail="unknown kind")
-        slot = self.next_slot(kind)
-        if slot is None:
-            return ActionResult(f"place:{kind}", False, detail="map full")
-        p, j, r = slot
-        cx, cy = slot_x(j, self.conn_every) + 1, OY + PERIOD * p + r
-        calls = self._infra_for(p, j) + [(self.kind_tool[kind], cx, cy)]
+        tiles = self.city.tiles()
+        for _ in range(200):                                  # skip slots that would touch water
+            slot = self.next_slot(kind)
+            if slot is None:
+                return ActionResult(f"place:{kind}", False, detail="map full")
+            p, j, r = slot
+            cx, cy = slot_x(j, self.conn_every, self.ox) + 1, self.oy + PERIOD * p + r
+            calls = self._infra_for(p, j) + [(self.kind_tool[kind], cx, cy)]
+            cells = [(x, y) for _, x, y in calls[:-1]] + [(cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)]
+            if any(not (0 <= x < WORLD_W and 0 <= y < WORLD_H) or WATER[0] <= tiles[y, x] <= WATER[1]
+                   for x, y in cells):
+                self.blocked.add(slot)
+                continue
+            break
+        else:
+            return ActionResult(f"place:{kind}", False, detail="no dry slot found")
         ok, need = self._affordable(calls)
         if not ok:
             return ActionResult(f"place:{kind}", False, detail=f"needs {need}, keeping reserve {self.reserve}",
@@ -192,13 +253,17 @@ class Planner:
 
     def build_power(self, kind: str = "coal") -> ActionResult:
         tool = self.T.NUCLEAR_POWER if kind == "nuclear" else self.T.COAL_POWER
-        free = [s for s in PLANT_SLOTS if s not in [(x, y) for x, y, _ in self.plants]]
+        tiles = self.city.tiles()
+        taken = {(x, y) for x, y, _ in self.plants}
+        free = [(x, y) for x, y in self.plant_slots if (x, y) not in taken and not any(
+            WATER[0] <= tiles[yy, xx] <= WATER[1] for xx in range(x - 1, x + 3) for yy in range(y - 1, y + 3))]
         if not free:
-            return ActionResult(f"power:{kind}", False, detail="no plant slot left")
+            return ActionResult(f"power:{kind}", False, detail="no dry plant slot left")
         x, y = free[0]
         calls = [(tool, x, y)]
         if not self.plants:   # first plant also needs the top of the spine
-            calls += [(self.T.WIRE, OX - 1, yy) for yy in range(OY - 2, OY) if (OX - 1, yy) not in self.wires]
+            calls += [(self.T.WIRE, self.ox - 1, yy) for yy in range(self.oy - 2, self.oy)
+                      if (self.ox - 1, yy) not in self.wires]
         ok, need = self._affordable(calls)
         if not ok:
             return ActionResult(f"power:{kind}", False, detail=f"needs {need}, keeping reserve {self.reserve}",
@@ -210,21 +275,22 @@ class Planner:
 
     def build_special(self, kind: str) -> ActionResult:
         """Stadium / seaport / airport in its fixed slot (needs the first power plant above it)."""
-        if kind not in SPECIAL_SLOTS:
+        if kind not in self.special_slots:
             return ActionResult(f"special:{kind}", False, detail="unknown kind")
         if kind in self.specials:
             return ActionResult(f"special:{kind}", False, detail="already built", skipped=True)
         if not self.plants:
             return ActionResult(f"special:{kind}", False, skipped=True, detail="needs a power plant first")
-        x, y = SPECIAL_SLOTS[kind]
-        x0, y0, x1, y1 = SPECIAL_FOOT[kind]
+        x, y = self.special_slots[kind]
+        x0, y0, x1, y1 = self.special_foot[kind]
         # clear our own bridge wires inside the footprint, then bridge the gap up to the first plant
         calls = [(self.T.BULLDOZER, wx, wy) for wx, wy in sorted(self.wires) if x0 <= wx <= x1 and y0 <= wy <= y1]
-        built = [SPECIAL_FOOT[k] for k in self.specials]
-        for wy in range(OY - 2, y0):
-            inside = any(a <= BRIDGE_X <= c and b <= wy <= d for a, b, c, d in built)
-            if not inside and (BRIDGE_X, wy) not in self.wires:
-                calls.append((self.T.WIRE, BRIDGE_X, wy))
+        built = [self.special_foot[k] for k in self.specials]
+        bx = self.bridge_x
+        for wy in range(self.oy - 2, y0):
+            inside = any(a <= bx <= c and b <= wy <= d for a, b, c, d in built)
+            if not inside and (bx, wy) not in self.wires:
+                calls.append((self.T.WIRE, bx, wy))
         calls.append((self.special_tool[kind], x, y))
         ok, need = self._affordable(calls)
         if not ok:
@@ -242,3 +308,60 @@ class Planner:
             return every == self.conn_every
         self.conn_every = every
         return True
+
+    # ------------------------------------------------------- disasters --
+    def audit(self) -> dict:
+        """Compare what we built with the map (fires, floods, tornadoes destroy things).
+
+        Lost zones/buildings free their slot; lost road/wire tiles leave our records so the
+        next repair or placement rebuilds them. Returns counts of what was found missing."""
+        mv = self.city.e.map_values
+        lo = mv & 0x03FF
+        zone_center = (mv & 0x0400) != 0
+        lost_slots = []
+        for (p, j, r), kind in list(self.used_slots.items()):
+            cx, cy = slot_x(j, self.conn_every, self.ox) + 1, self.oy + PERIOD * p + r
+            if not zone_center[cy, cx]:
+                lost_slots.append(((p, j, r), kind))
+                del self.used_slots[(p, j, r)]
+        lost_roads = [(x, y) for x, y in self.roads if not (64 <= lo[y, x] <= 206)]
+        # a wire survives as a power line (208-222) or as a road tile that conducts (road/power crossing;
+        # its id changes as traffic animates, e.g. 77 -> 93, so check the CONDBIT flag, not the id)
+        conducts = (mv & 0x4000) != 0
+        lost_wires = [(x, y) for x, y in self.wires
+                      if not (208 <= lo[y, x] <= 222 or (64 <= lo[y, x] <= 206 and conducts[y, x]))]
+        for c in lost_roads:
+            self.roads.discard(c)
+        for c in lost_wires:
+            self.wires.discard(c)
+        lost_plants = [pl for pl in self.plants if not zone_center[pl[1], pl[0]]]
+        for pl in lost_plants:
+            self.plants.remove(pl)
+        lost_specials = [k for k, (x, y) in self.specials.items() if not zone_center[y, x]]
+        for k in lost_specials:
+            del self.specials[k]
+        self.destroyed += [kind for _, kind in lost_slots]
+        return {"zones_lost": len(lost_slots), "lost_kinds": [k for _, k in lost_slots], "roads_lost": len(lost_roads),
+                "wires_lost": len(lost_wires), "plants_lost": len(lost_plants), "specials_lost": lost_specials}
+
+    def needs_repair(self) -> bool:
+        pairs = {}
+        for p, j, _ in self.used_slots:
+            pairs[p] = max(pairs.get(p, 0), j)
+        return any(self._infra_for(p, j) for p, j in pairs.items())
+
+    def repair(self) -> ActionResult:
+        """Rebuild missing roads/wires that serve existing slots (one row pair per call)."""
+        pairs = {}
+        for p, j, _ in self.used_slots:
+            pairs[p] = max(pairs.get(p, 0), j)
+        for p, j in sorted(pairs.items()):
+            calls = self._infra_for(p, j)
+            if calls:
+                ok, need = self._affordable(calls)
+                if not ok:
+                    return ActionResult("repair", False, detail=f"needs {need}, keeping reserve {self.reserve}",
+                                        skipped=True)
+                ok, spent, why = self._run(calls)
+                return ActionResult("repair", ok, spent, why or f"row pair {p}: {len(calls)} road/wire tiles")
+        return ActionResult("repair", False, detail="nothing to repair", skipped=True)

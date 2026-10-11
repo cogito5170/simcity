@@ -140,6 +140,12 @@ Facts verified in this engine (by our own tests, not assumptions):
   Road effect falls in proportion and roads decay into rubble; police/fire coverage weakens (8-year test,
   road+police+fire at 50%: road effect 32->16, crime 97->109, road tiles 202->173, but more money left;
   at 0%: crime 167, road tiles 140). Yearly needs are in road_fund/police_fund/fire_fund; tax income is tax_fund.
+- Terrain and disasters (when on): the layout sits on the driest land found; slots that would touch water are
+  skipped. Fires, floods and tornadoes can destroy zones and roads. Every month code compares the map with
+  what was built: destroyed zones free their slot (rebuilt as demand allows), missing roads/power lines are
+  repaired first (costs money, counts as one build). fire_tiles, flood_tiles, rubble_tiles and
+  zones_lost_this_month are counted by code from the map. Fire stations and fire_funding limit fire spread.
+  Low road_funding also turns roads into rubble, which then costs repairs.
 - land_use "separated" puts new industry in its own district ~50 tiles from housing. Fixed-strategy tests,
   8 seeds, 20 years, tax 7%: separated peaked higher (mean 21.0k vs 18.3k) but ended lower (mean 8.6k vs
   11.4k) with higher average pollution (57 vs 45). Why pollution rose is not established (longer commutes?).
