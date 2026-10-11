@@ -142,10 +142,16 @@ Facts verified in this engine (by our own tests, not assumptions):
   at 0%: crime 167, road tiles 140). Yearly needs are in road_fund/police_fund/fire_fund; tax income is tax_fund.
 - Terrain and disasters (when on): the layout sits on the driest land found; slots that would touch water are
   skipped. Fires, floods and tornadoes can destroy zones and roads. Every month code compares the map with
-  what was built: destroyed zones free their slot (rebuilt as demand allows), missing roads/power lines are
-  repaired first (costs money, counts as one build). fire_tiles, flood_tiles, rubble_tiles and
+  what was built: destroyed zones free their slot (rebuilt as demand allows), missing power lines are
+  repaired first (costs money; while unaffordable nothing else is built). Missing roads are rebuilt only
+  with repair_roads=true. fire_tiles, flood_tiles, rubble_tiles and
   zones_lost_this_month are counted by code from the map. Fire stations and fire_funding limit fire spread.
-  Low road_funding also turns roads into rubble, which then costs repairs.
+  Low road_funding also turns roads into rubble.
+- Traffic pollutes (engine source scan.cpp: a road tile with light traffic adds pollution 50, heavy 75).
+  Fixed-strategy test, seeds 17-22, 20 years, road_funding 50: rebuilding decayed roads (repair_roads=true)
+  gave mean population 15.7k vs 22.6k without (traffic_avg 29.5 vs 11.7) on flat maps, and 15.3k vs 19.7k
+  (traffic 50.3 vs 9.6) with terrain+disasters. road_funding 100 (no decay): 14.8k flat, 13.3k terrain.
+  The traffic->pollution link is from source; that it is the whole cause is not established.
 - land_use "separated" puts new industry in its own district ~50 tiles from housing. Fixed-strategy tests,
   8 seeds, 20 years, tax 7%: separated peaked higher (mean 21.0k vs 18.3k) but ended lower (mean 8.6k vs
   11.4k) with higher average pollution (57 vs 45). Why pollution rose is not established (longer commutes?).
@@ -169,7 +175,7 @@ Return ONE JSON object, no prose:
   "reserve_funds": int {reserve}, "zones_per_police": int {police}, "zones_per_fire": int {fire},
   "power_type": "coal"|"nuclear", "max_builds_per_month": int {builds}, "build_specials": true|false,
   "land_use": "mixed"|"separated", "road_funding": int 0-100, "police_funding": int 0-100,
-  "fire_funding": int 0-100, "road_spacing": int 3-6}},
+  "fire_funding": int 0-100, "road_spacing": int 3-6, "repair_roads": true|false}},
  "reasoning": ["short points in Korean, citing the measured numbers you rely on"],
  "alternatives": [{{"option": "Korean", "why_not": "Korean"}}],
  "expected": {{"population": "up|down|flat", "funds": "...", "crime_avg": "...", "pollution_avg": "...", "traffic_avg": "..."}},

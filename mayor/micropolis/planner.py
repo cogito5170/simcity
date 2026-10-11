@@ -128,6 +128,7 @@ class Planner:
     districts: bool = False                          # separate industrial district (see next_slot)
     conn_every: int = CONN_EVERY                     # connector road after every N slots; fixed once building starts
     ox: int = OX                                     # layout origin (see choose_origin for terrain maps)
+    track_roads: bool = False                        # audit/repair lost road tiles too (power lines always)
     oy: int = OY
 
     def __post_init__(self):
@@ -338,7 +339,9 @@ class Planner:
             if not zone_center[cy, cx]:
                 lost_slots.append(((p, j, r), kind))
                 del self.used_slots[(p, j, r)]
-        lost_roads = [(x, y) for x, y in self.roads if not (64 <= lo[y, x] <= 206)]
+        # untracked roads stay in our records, so nothing rebuilds them (see Strategy.repair_roads)
+        lost_roads = ([(x, y) for x, y in self.roads if not (64 <= lo[y, x] <= 206)]
+                      if self.track_roads else [])
         # a wire survives as a power line (208-222) or as a road tile that conducts (road/power crossing;
         # its id changes as traffic animates, e.g. 77 -> 93, so check the CONDBIT flag, not the id)
         conducts = (mv & 0x4000) != 0

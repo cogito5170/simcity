@@ -178,6 +178,24 @@ class EngineTests(unittest.TestCase):
             c.advance_month()
         self.assertEqual(c.stats()["unpowered_zones"], 0)
 
+    def test_lost_roads_are_rebuilt_only_with_repair_roads(self):
+        from mayor.micropolis.planner import Planner
+        c = City(seed=1)
+        c.e.set_funds(100000)
+        p = Planner(c)
+        self.assertTrue(p.build_power("coal").ok)
+        self.assertTrue(p.place("residential").ok)
+        x, y = sorted(p.roads - p.wires)[0]
+        c.tool(p.T.BULLDOZER, x, y)
+        self.assertEqual(p.audit()["roads_lost"], 0)          # default: decayed roads are left alone
+        self.assertFalse(p.needs_repair())
+        p.track_roads = True
+        self.assertEqual(p.audit()["roads_lost"], 1)
+        self.assertTrue(p.needs_repair())
+        self.assertTrue(p.repair().ok)
+        self.assertTrue(64 <= (c.e.map_values[y, x] & 0x3FF) <= 206)
+        self.assertTrue(Strategy.from_dict({"repair_roads": True})[0].repair_roads)
+
     def test_demand_caps_match_engine_rule(self):
         self.assertEqual(demand_caps(dict(STATS, res_pop=501)), {"stadium": True, "seaport": False, "airport": False})
 

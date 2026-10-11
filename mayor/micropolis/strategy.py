@@ -41,6 +41,7 @@ class Strategy:
     police_funding: int = 100     # % of police station upkeep paid; lowers police effect
     fire_funding: int = 100       # % of fire station upkeep paid; lowers fire effect
     road_spacing: int = 6         # connector road after every N slots (3-6); only applies before the first zone
+    repair_roads: bool = False    # rebuild road tiles lost to decay/disasters (power lines are always rebuilt)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -77,8 +78,9 @@ class Strategy:
             s.land_use = d["land_use"]
         elif "land_use" in d:
             notes.append(f"land_use: {d['land_use']!r} not mixed/separated, kept {s.land_use}")
-        if isinstance(d.get("build_specials"), bool):
-            s.build_specials = d["build_specials"]
+        for k in ("build_specials", "repair_roads"):
+            if isinstance(d.get(k), bool):
+                setattr(s, k, d[k])
         if d.get("power_type") in ("coal", "nuclear"):
             s.power_type = d["power_type"]
         elif "power_type" in d:
@@ -114,6 +116,7 @@ def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_sinc
     planner.reserve = strategy.reserve_funds
     planner.districts = strategy.land_use == "separated"
     planner.set_road_spacing(strategy.road_spacing)
+    planner.track_roads = strategy.repair_roads
     if city.has_budget_control:
         city.set_budget(strategy.road_funding, strategy.police_funding, strategy.fire_funding)
     done: list[ActionResult] = []
@@ -125,13 +128,16 @@ def execute_month(planner: Planner, strategy: Strategy, stats: dict, months_sinc
     if need_power and budget > 0:
         done.append(planner.build_power(strategy.power_type))
         budget -= 1
-    # 1b. disaster repair: roads/power lines that served existing zones (lost zones simply
-    #     free their slot and are rebuilt by step 4 as demand allows)
-    if damaged and budget > 0:
+    # 1b. repair power lines (and roads, if repair_roads) that serve existing zones, lost to disasters
+    #     or, for roads, to decay when road_funding < 100. Repair is upkeep, not a build: it does not
+    #     use the monthly build budget. If it cannot be afforded, nothing new is built this month.
+    #     Lost zones free their slot and are rebuilt by step 4.
+    if damaged:
         r = planner.repair()
         if not r.skipped or "reserve" in r.detail:
             done.append(r)
-            budget -= 1
+        if r.skipped and "reserve" in r.detail:
+            budget = 0
     # 2. special buildings: without them the engine holds that demand at 0 (see engine.demand_caps)
     if strategy.build_specials:
         for kind, capped in demand_caps(stats).items():
