@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -98,6 +99,8 @@ def run_mayor(years: int = 20, seed: int = 0, reviewer=None, review_every: int =
         with open(run_dir / "months.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
         tiles.append(city.tiles().astype(np.uint16))
+        np.save(run_dir / "live_tiles.tmp.npy", tiles[-1])           # current map, for live viewers
+        os.replace(run_dir / "live_tiles.tmp.npy", run_dir / "live_tiles.npy")
         if on_month:
             on_month(rec)
         if m % 60 == 59:

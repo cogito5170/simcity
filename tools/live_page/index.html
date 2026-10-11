@@ -1,0 +1,337 @@
+<title>시장 AI 생중계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<style>
+/* Layout: a city-hall control room. The live map is the stage on the left; the mayor's
+   instruments (demand valves, labor balance, latest decision) sit in a side rail; the
+   128-year population trace runs underneath. */
+:root {
+  --bg: #e9eeeb;
+  --panel: #fbfcfb;
+  --ink: #16201b;
+  --muted: #5a6862;
+  --line: #d2dbd6;
+  --accent: #c2410c;      /* traffic-cone orange: live state, progress */
+  --res: #2b8a3e;         /* Micropolis zone colours: R green, C blue, I yellow */
+  --com: #1971c2;
+  --ind: #b7860b;
+  --bad: #c92a2a;
+  --good: #2b8a3e;
+  --map-bg: #3a2f22;
+  --font-display: "Black Han Sans", "IBM Plex Sans KR", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1412; --panel: #161f1b; --ink: #e5ece8; --muted: #93a39c; --line: #2a3632;
+    --accent: #f07a3e; --res: #51cf66; --com: #4dabf7; --ind: #f2c94c; --bad: #ff6b6b; --good: #51cf66;
+    --map-bg: #241d15; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1412; --panel: #161f1b; --ink: #e5ece8; --muted: #93a39c; --line: #2a3632;
+  --accent: #f07a3e; --res: #51cf66; --com: #4dabf7; --ind: #f2c94c; --bad: #ff6b6b; --good: #51cf66;
+  --map-bg: #241d15; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 18px; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+.title { display: grid; gap: 4px; min-width: 0; }
+.eyebrow { font: 600 12px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font: 400 clamp(26px, 4vw, 38px)/1.1 var(--font-display); text-wrap: balance; }
+.clock { display: grid; justify-items: end; gap: 6px; }
+.gamedate { font: 400 clamp(30px, 5vw, 46px)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.live { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--font-data); letter-spacing: .06em; color: var(--muted); }
+.live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.live[data-state="live"] { color: var(--accent); }
+.live[data-state="live"] .dot { background: var(--accent); animation: pulse 1.6s ease-in-out infinite; }
+.live[data-state="done"] { color: var(--good); }
+.live[data-state="done"] .dot { background: var(--good); }
+@keyframes pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .live .dot { animation: none !important; } }
+
+.progress { display: grid; gap: 6px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .6s ease; }
+.progress .meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 12px/1.3 var(--font-data); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.map { background: var(--map-bg); border-radius: 10px; overflow: hidden; position: relative; min-height: 240px; display: grid; place-items: center; }
+.map canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.map .empty { color: #e9dfcf; padding: 40px 24px; text-align: center; max-width: 40ch; font-size: 14px; }
+.map .stamp { position: absolute; left: 10px; bottom: 10px; background: rgba(10, 12, 10, .72); color: #f3efe6;
+  font: 12px/1.4 var(--font-data); padding: 6px 9px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+
+.rail { display: grid; gap: 14px; min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.panel h2 { margin: 0; font: 600 12px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.kpi { display: grid; gap: 2px; }
+.kpi b { font: 600 22px/1.15 var(--font-data); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.kpi small { font: 12px var(--font-data); }
+.up { color: var(--good); } .down { color: var(--bad); }
+
+.valves { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.valve { display: grid; gap: 6px; justify-items: center; font-size: 12px; color: var(--muted); }
+.valve .track { position: relative; width: 100%; height: 64px; background: linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat; }
+.valve .fill { position: absolute; left: 22%; right: 22%; border-radius: 3px; transition: all .5s ease; }
+.valve b { font: 600 13px var(--font-data); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.meter { display: grid; gap: 6px; }
+.meter .scale { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(90deg, color-mix(in srgb, var(--bad) 35%, transparent), color-mix(in srgb, var(--good) 35%, transparent)); }
+.meter .needle { position: absolute; top: -4px; width: 3px; height: 22px; background: var(--ink); border-radius: 2px; transition: left .5s ease; }
+.meter .thr { position: absolute; top: -2px; height: 18px; border-left: 2px dashed var(--ink); opacity: .55; }
+.meter .row { display: flex; justify-content: space-between; gap: 8px; font: 12px var(--font-data); color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 12px/1 var(--font-data); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); color: var(--ink); background: var(--bg); }
+.chip.on { border-color: var(--good); color: var(--good); }
+.chip.off { color: var(--muted); }
+.chip.warn { border-color: var(--bad); color: var(--bad); }
+
+.review ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.review li { font-size: 14px; }
+.review time { font: 600 13px var(--font-data); }
+
+.lower { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .lower { grid-template-columns: minmax(0, 1fr); } }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 11px var(--font-data); }
+.log ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 300px; overflow: auto; }
+.log li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; font-size: 13px; }
+.log li time { font: 12px var(--font-data); color: var(--muted); font-variant-numeric: tabular-nums; }
+.log li.alert { color: var(--bad); }
+footer { font-size: 13px; color: var(--muted); max-width: 80ch; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <span class="eyebrow" id="sub">Micropolis · seed 21 · 지형 + 재난</span>
+      <h1>시장 AI 생중계</h1>
+    </div>
+    <div class="clock">
+      <span class="live" id="live" data-state="wait"><span class="dot"></span><span id="liveText">연결 중</span></span>
+      <span class="gamedate" id="gamedate">—</span>
+    </div>
+  </header>
+
+  <div class="progress">
+    <div class="bar"><i id="prog"></i></div>
+    <div class="meta"><span>1900년 1월 시작</span><span id="progText">2027년 12월까지 128년</span><span id="updated"></span></div>
+  </div>
+
+  <div class="main">
+    <div class="map" id="mapBox">
+      <p class="empty" id="mapEmpty">도시 데이터를 기다리는 중입니다. 시뮬레이션이 돌아가는 동안 게임 1년마다 지도와 수치가 새로 들어옵니다.</p>
+      <canvas id="map" hidden></canvas>
+      <span class="stamp" id="stamp" hidden></span>
+    </div>
+
+    <div class="rail">
+      <section class="panel">
+        <h2>도시 현황</h2>
+        <div class="kpis">
+          <div class="kpi"><span>인구</span><b id="kPop">—</b><small id="kPopD"></small></div>
+          <div class="kpi"><span>자금</span><b id="kFunds">—</b><small id="kFlow"></small></div>
+          <div class="kpi"><span>세율</span><b id="kTax">—</b></div>
+          <div class="kpi"><span>주민 / 상업 / 공업</span><b id="kRci">—</b></div>
+        </div>
+        <div class="chips" id="specials"></div>
+      </section>
+
+      <section class="panel">
+        <h2>수요 밸브</h2>
+        <div class="valves">
+          <div class="valve"><div class="track"><span class="fill" id="vR" style="background:var(--res)"></span></div><b id="vRt">—</b>주거</div>
+          <div class="valve"><div class="track"><span class="fill" id="vC" style="background:var(--com)"></span></div><b id="vCt">—</b>상업</div>
+          <div class="valve"><div class="track"><span class="fill" id="vI" style="background:var(--ind)"></span></div><b id="vIt">—</b>공업</div>
+        </div>
+        <div class="meter">
+          <div class="row"><span>labor_base (주민 ÷ 일자리)</span><b id="lbv">—</b></div>
+          <div class="scale"><span class="thr" id="thr"></span><span class="needle" id="needle"></span></div>
+          <div class="row"><span>0</span><span id="thrText"></span><span>1.3</span></div>
+          <p class="note">점선보다 왼쪽이면 주거·공업 수요가 매달 떨어집니다. 지난 실험에서 진 도시들은 여기서 무너졌습니다.</p>
+        </div>
+      </section>
+
+      <section class="panel review">
+        <h2>시장의 최근 판단</h2>
+        <div id="review"><p class="note">첫 재검토를 기다리는 중입니다.</p></div>
+        <div class="chips" id="strategy"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="lower">
+    <section class="panel chart">
+      <h2>인구 1900 → 2027</h2>
+      <svg id="chart" viewBox="0 0 640 220" role="img" aria-label="월별 인구 그래프"></svg>
+      <div class="chips" id="services"></div>
+    </section>
+    <section class="panel log">
+      <h2>최근 기록</h2>
+      <ol id="log"><li><time></time><span class="note">아직 기록이 없습니다.</span></li></ol>
+    </section>
+  </div>
+
+  <footer id="foot">Claude Code가 시장입니다. 게임 1년마다 실행 중인 시뮬레이션에서 지도와 수치를 받아 이 페이지가 바로 다시 그립니다. 시장은 1년에 한두 번 전략을 다시 정하고, 매달의 건설은 코드가 합니다.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const TAX = [200,150,120,100,80,50,30,0,-10,-40,-100,-150,-200,-250,-300,-350,-400,-450,-500,-550,-600];
+  const nf = new Intl.NumberFormat("ko-KR");
+  const atlas = new Image();
+  let atlasReady = false, last = null, box = null;
+  atlas.onload = () => { atlasReady = true; if (last) drawMap(last); };
+  atlas.src = "tiles.png";
+
+  const korDate = (d) => d ? `${d.slice(0, 4)}년 ${parseInt(d.slice(5), 10)}월` : "—";
+
+  function drawMap(s) {
+    if (!s.map || !atlasReady) return;
+    const { w, h, b64 } = s.map;
+    const bin = atob(b64), t = new Uint16Array(w * h);
+    for (let i = 0; i < w * h; i++) t[i] = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8);
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (t[y * w + x] >= 44) {
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    if (x1 < 0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+    const m = 5;
+    let nb = [Math.max(0, x0 - m), Math.max(0, y0 - m), Math.min(w - 1, x1 + m), Math.min(h - 1, y1 + m)];
+    if (box) nb = [Math.min(box[0], nb[0]), Math.min(box[1], nb[1]), Math.max(box[2], nb[2]), Math.max(box[3], nb[3])];
+    box = nb;
+    const bw = box[2] - box[0] + 1, bh = box[3] - box[1] + 1;
+    const c = $("map"), g = c.getContext("2d");
+    c.width = bw * 16; c.height = bh * 16;
+    g.imageSmoothingEnabled = false;
+    for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+      const id = t[(y + box[1]) * w + x + box[0]];
+      g.drawImage(atlas, (id % 32) * 16, Math.floor(id / 32) * 16, 16, 16, x * 16, y * 16, 16, 16);
+    }
+    c.hidden = false; $("mapEmpty").hidden = true;
+    $("stamp").hidden = false;
+    $("stamp").textContent = `${korDate(s.date)} · 인구 ${nf.format(s.kpi.population)}`;
+  }
+
+  function valve(id, v, max) {
+    const el = $(id), f = Math.max(-1, Math.min(1, v / max)), half = 50 * Math.abs(f);
+    el.style.top = f >= 0 ? `${50 - half}%` : "50%";
+    el.style.height = `${Math.max(half, 0.8)}%`;
+    $(id + "t").textContent = (v > 0 ? "+" : "") + nf.format(Math.round(v));
+  }
+
+  function chart(s) {
+    const svg = $("chart"), W = 640, H = 220, L = 48, R = 12, T = 12, B = 26;
+    const pop = s.series.population, total = s.months_total || 1536;
+    const max = Math.max(1000, ...pop);
+    const rough = max / 4, mag = Math.pow(10, Math.floor(Math.log10(rough))), norm = rough / mag;
+    const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+    const top = Math.ceil(max / step) * step;
+    const X = (i) => L + (W - L - R) * i / (total - 1), Y = (v) => T + (H - T - B) * (1 - v / top);
+    let out = "";
+    for (let v = 0; v <= top + 1e-9; v += step) {
+      out += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+      out += `<text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${v >= 1000 ? nf.format(v / 1000) + "k" : v}</text>`;
+    }
+    for (const yr of [1900, 1925, 1950, 1975, 2000, 2027]) {
+      const i = (yr - 1900) * 12 + (yr === 2027 ? 11 : 0);
+      out += `<text x="${X(i)}" y="${H - 8}" text-anchor="${yr === 1900 ? "start" : yr === 2027 ? "end" : "middle"}">${yr}</text>`;
+    }
+    if (pop.length) {
+      const pts = pop.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+      out += `<polygon points="${X(0)},${Y(0)} ${pts} ${X(pop.length - 1)},${Y(0)}" fill="var(--accent)" fill-opacity=".14"/>`;
+      out += `<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.6"/>`;
+      const i = pop.length - 1;
+      out += `<circle cx="${X(i)}" cy="${Y(pop[i])}" r="4" fill="var(--accent)"/>`;
+    }
+    svg.innerHTML = out;
+  }
+
+  function render(s) {
+    last = s;
+    const k = s.kpi, done = s.status === "finished";
+    const pct = Math.min(100, 100 * (s.month_index + 1) / (s.months_total || 1536));
+    $("gamedate").textContent = korDate(s.date);
+    $("prog").style.width = pct.toFixed(1) + "%";
+    $("progText").textContent = `${pct.toFixed(1)}% · 2027년 12월까지 128년`;
+    $("kPop").textContent = nf.format(k.population);
+    const p = s.series.population, prev = p.length > 12 ? p[p.length - 13] : null;
+    $("kPopD").innerHTML = prev == null ? "" : `<span class="${k.population >= prev ? "up" : "down"}">1년 전보다 ${k.population >= prev ? "+" : ""}${nf.format(k.population - prev)}</span>`;
+    $("kFunds").textContent = "$" + nf.format(k.funds);
+    $("kFlow").innerHTML = `<span class="${k.cash_flow >= 0 ? "up" : "down"}">현금흐름 ${k.cash_flow >= 0 ? "+" : ""}${nf.format(k.cash_flow)}</span>`;
+    $("kTax").textContent = s.tax_rate + "%";
+    $("kRci").textContent = `${nf.format(k.res_pop)} / ${nf.format(k.com_pop)} / ${nf.format(k.ind_pop)}`;
+    $("specials").innerHTML = [["stadiums", "경기장"], ["seaports", "항구"], ["airports", "공항"]]
+      .map(([key, name]) => `<span class="chip ${k[key] > 0 ? "on" : "off"}">${name} ${k[key] > 0 ? "있음" : "없음"}</span>`).join("")
+      + (k.unpowered_zones > 0 ? `<span class="chip warn">정전 구역 ${k.unpowered_zones}</span>` : "")
+      + (k.fire_tiles > 0 ? `<span class="chip warn">화재 ${k.fire_tiles}칸</span>` : "")
+      + (k.flood_tiles > 0 ? `<span class="chip warn">홍수 ${k.flood_tiles}칸</span>` : "");
+    valve("vR", k.res_valve, 2000); valve("vC", k.com_valve, 1500); valve("vI", k.ind_valve, 1500);
+    const lb = k.labor_base ?? 0, thr = (1 - TAX[Math.min(20, s.tax_rate)] / 600) / 1.2;
+    $("lbv").textContent = lb.toFixed(2);
+    $("lbv").className = lb < thr ? "down" : "up";
+    $("needle").style.left = `calc(${(100 * Math.min(1.3, lb) / 1.3).toFixed(1)}% - 1px)`;
+    $("thr").style.left = (100 * thr / 1.3).toFixed(1) + "%";
+    $("thrText").textContent = `세율 ${s.tax_rate}% 기준선 ${thr.toFixed(2)}`;
+    const r = s.reviews[s.reviews.length - 1];
+    if (r) {
+      $("review").innerHTML = `<time>${korDate(r.date)}</time><ul>${r.reasoning.map((x) => `<li></li>`).join("")}</ul>`;
+      $("review").querySelectorAll("li").forEach((li, i) => { li.textContent = r.reasoning[i]; });
+      const st = r.strategy, mix = st.zone_mix || {};
+      const pc = (v) => Math.round((v || 0) * 100);
+      $("strategy").innerHTML = [
+        `세율 ${st.tax_rate}%`, `구역 비율 R${pc(mix.residential)} C${pc(mix.commercial)} I${pc(mix.industrial)}`,
+        `예비금 $${nf.format(st.reserve_funds)}`, `월 ${st.max_builds_per_month}건`, `도로 ${st.road_funding}% · 경찰 ${st.police_funding}% · 소방 ${st.fire_funding}%`,
+      ].map((x) => `<span class="chip">${x}</span>`).join("")
+        + [["balance_jobs", "일자리 균형"], ["save_for_specials", "경기장 저축"], ["repair_roads", "도로 복구"]]
+          .map(([key, name]) => `<span class="chip ${st[key] ? "on" : "off"}">${name} ${st[key] ? "켬" : "끔"}</span>`).join("");
+    }
+    $("services").innerHTML = [`범죄 ${Math.round(k.crime_avg)}`, `오염 ${Math.round(k.pollution_avg)}`, `지가 ${Math.round(k.land_value_avg)}`, `교통 ${Math.round(k.traffic_avg)}`]
+      .map((x) => `<span class="chip">${x}</span>`).join("");
+    const log = $("log"); log.innerHTML = "";
+    for (const e of s.events) {
+      const li = document.createElement("li"); if (e.alert) li.className = "alert";
+      const t = document.createElement("time"); t.textContent = e.date;
+      const sp = document.createElement("span"); sp.textContent = e.text;
+      li.append(t, sp); log.append(li);
+    }
+    if (!s.events.length) log.innerHTML = `<li><time></time><span class="note">최근 3년 동안 건설 기록이 없습니다.</span></li>`;
+    $("foot").textContent = `Claude Code가 시장입니다. 지금까지 전략 재검토 ${s.reviews_total}회, 정가 환산 $${s.llm_cost_usd}. `
+      + "게임 1년마다 실행 중인 시뮬레이션에서 지도와 수치를 받아 이 페이지가 바로 다시 그립니다. 매달의 건설은 코드가 합니다.";
+    chart(s); drawMap(s); tick();
+  }
+
+  function tick() {
+    if (!last) return;
+    const ago = Math.max(0, Math.round((Date.now() - Date.parse(last.updated_at)) / 1000));
+    const agoText = ago < 60 ? `${ago}초 전` : ago < 3600 ? `${Math.floor(ago / 60)}분 전` : `${Math.floor(ago / 3600)}시간 전`;
+    $("updated").textContent = `마지막 갱신 ${agoText}`;
+    const live = $("live");
+    if (last.status === "finished") { live.dataset.state = "done"; $("liveText").textContent = "완료"; }
+    else if (ago < 300) { live.dataset.state = "live"; $("liveText").textContent = "LIVE"; }
+    else { live.dataset.state = "wait"; $("liveText").textContent = "갱신 대기"; }
+  }
+  setInterval(tick, 5000);
+
+  (async () => {
+    const db = window.claude ? await window.claude.use("db") : null;
+    if (!db) { $("liveText").textContent = "로그인하면 실시간 데이터가 보입니다"; return; }
+    $("liveText").textContent = "대기";
+    db.doc("live/state").onSnapshot((snap) => {
+      if (snap.exists) { try { render(snap.data()); } catch (e) { console.error(e); } }
+    }, () => { $("live").dataset.state = "wait"; $("liveText").textContent = "연결 끊김 · 새로고침해 주세요"; });
+  })();
+})();
+</script>
