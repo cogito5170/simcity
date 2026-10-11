@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mayor.openttd.admin import Admin  # noqa: E402
 
 CHUNK = 240_000
+MAX_B64 = 720_000      # 3 parts; the batch limit is 1 MiB
 KEEP = 4
 
 
@@ -120,14 +121,21 @@ def main():
             time.sleep(max(0.0, (i + 1) / a.fps - (time.time() - t0)))
         time.sleep(1.5)                                   # let the last screenshot finish writing
         mp4 = out / f"seg_{seq}.mp4"
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(a.fps), "-i", str(frames / "f%04d.png"),
-                        "-c:v", "libx264", "-preset", "veryfast", "-crf", str(a.crf), "-pix_fmt", "yuv420p",
-                        "-g", str(a.fps * 10), "-movflags", "+faststart", str(mp4)], check=True)
+        # under 0.5% of pixels change per frame, so one keyframe per segment keeps it small;
+        # raise crf until the base64 fits the page's 1 MiB batch with room for the state document
+        crf = a.crf
+        while True:
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(a.fps), "-i", str(frames / "f%04d.png"),
+                            "-c:v", "libx264", "-preset", "medium", "-tune", "animation", "-crf", str(crf),
+                            "-pix_fmt", "yuv420p", "-g", "9999", "-movflags", "+faststart", str(mp4)], check=True)
+            if mp4.stat().st_size * 4 / 3 <= MAX_B64 or crf >= 44:
+                break
+            crf += 4
         shutil.rmtree(frames, ignore_errors=True)
         b64 = base64.b64encode(mp4.read_bytes()).decode()
         chunks = [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
         state = load_state(run_dir)
-        meta = {"seq": seq, "parts": len(chunks), "label": target["label"], "line": target["line"],
+        meta = {"seq": seq, "parts": len(chunks), "crf": crf, "label": target["label"], "line": target["line"],
                 "game_from": game_from, "game_to": (state.get("obs") or {}).get("date"),
                 "seconds": a.seconds, "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
         for k, c in enumerate(chunks):
