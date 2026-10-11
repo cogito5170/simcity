@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mayor.openttd.admin import Admin  # noqa: E402
 
-MAX_B64 = 720_000      # keep each clip under ~540 KB so viewers load it quickly
+MAX_B64 = 1_400_000    # keep each clip under ~1 MB so viewers load it quickly
 KEEP = 4
 
 
@@ -43,28 +43,52 @@ def load_state(run_dir: Path) -> dict:
         return {}
 
 
+def _fit_zoom(dx: int, dy: int, w: int, h: int) -> int:
+    """Smallest zoom (2 = normal, 3-5 = zoomed out 2x/4x/8x) at which a dx x dy tile box fits w x h pixels.
+    An isometric box spans about (dx+dy)*32 px across and (dx+dy)*16 px down at normal zoom."""
+    for z in (2, 3, 4, 5):
+        s = 2 ** (z - 2)
+        if (dx + dy) * 32 / s <= w and (dx + dy) * 16 / s <= h:
+            return z
+    return 5
+
+
+def clusters(lines: list) -> list[list]:
+    """Group lines that share a town or lie within 60 tiles of each other."""
+    groups: list[list] = []
+    for ln in lines:
+        pts = [tuple(ln["a_xy"]), tuple(ln["b_xy"])]
+        near = [g for g in groups if any(abs(p[0] - q[0]) + abs(p[1] - q[1]) <= 60
+                                         for l2 in g for q in (tuple(l2["a_xy"]), tuple(l2["b_xy"])) for p in pts)]
+        merged = [ln] + [x for g in near for x in g]
+        groups = [g for g in groups if g not in near] + [merged]
+    return groups
+
+
 def pick_target(state: dict, seq: int, shown: dict) -> dict:
+    """Mostly zoomed-out views of the whole network, so the structure is visible:
+    a new line gets one close-up first; then each group of lines in turn, and every third shot the whole map."""
     lines = state.get("lines") or []
     if not lines:
-        return {"label": "회사 설립 준비 중", "x": 128, "y": 128, "zoom": 2, "line": None}
+        return {"label": "지도 전체", "x": 128, "y": 128, "zoom": 5, "w": 1920, "h": 1080, "line": None, "mode": "map"}
     newest = max(lines, key=lambda ln: ln["id"])
-    if newest["id"] not in shown:              # a new line gets the next two segments: overview, then a stop
-        ln, mode = newest, "overview"
-        shown[ln["id"]] = 1
-    elif shown.get(newest["id"]) == 1:
-        ln, mode = newest, "stop"
-        shown[ln["id"]] = 2
-    else:                                      # then take turns: overview of one line, close-up of the next
-        ln = lines[(seq // 2) % len(lines)]
-        mode = "overview" if seq % 2 else "stop"
-    label = f"노선 {ln['id']}: {ln['a']} – {ln['b']}"
-    if mode == "stop":
-        x, y = ln["stops"][seq % 2]
-        town = ln["a"] if seq % 2 == 0 else ln["b"]
-        return {"label": f"{label} · {town} 정류장", "x": x, "y": y, "zoom": 0, "line": ln["id"], "mode": mode}
-    x, y = ln.get("mid") or ((ln["a_xy"][0] + ln["b_xy"][0]) // 2, (ln["a_xy"][1] + ln["b_xy"][1]) // 2)
-    span = ln.get("span") or max(abs(ln["a_xy"][0] - ln["b_xy"][0]), abs(ln["a_xy"][1] - ln["b_xy"][1]))
-    return {"label": f"{label} · 전체", "x": x, "y": y, "zoom": 1 if span <= 26 else 2, "line": ln["id"], "mode": mode}
+    if newest["id"] not in shown:
+        shown[newest["id"]] = seq
+        x, y = newest.get("mid") or newest["a_xy"]
+        return {"label": f"새 노선 {newest['id']}: {newest['a']} – {newest['b']}", "x": x, "y": y, "zoom": 2,
+                "w": 1280, "h": 720, "line": newest["id"], "mode": "new"}
+    if seq % 3 == 0:
+        return {"label": "지도 전체 (분홍 표지가 회사 정류장)", "x": 128, "y": 128, "zoom": 5, "w": 1920, "h": 1080,
+                "line": None, "mode": "map"}
+    groups = sorted(clusters(lines), key=lambda g: -len(g))
+    g = groups[(seq // 3) % len(groups)]
+    xs = [p[0] for ln in g for p in (ln["a_xy"], ln["b_xy"])]
+    ys = [p[1] for ln in g for p in (ln["a_xy"], ln["b_xy"])]
+    dx, dy = max(xs) - min(xs) + 6, max(ys) - min(ys) + 6
+    towns = sorted({ln["a"] for ln in g} | {ln["b"] for ln in g})
+    return {"label": f"노선망 {len(g)}개 노선: {', '.join(towns[:5])}{' 외' if len(towns) > 5 else ''}",
+            "x": (min(xs) + max(xs)) // 2, "y": (min(ys) + max(ys)) // 2, "zoom": max(3, _fit_zoom(dx, dy, 1920, 1080)),
+            "w": 1920, "h": 1080, "line": None, "mode": "network"}
 
 
 def history(run_dir: Path, max_points: int = 400) -> list:
@@ -115,7 +139,8 @@ def main():
         game_from = (state.get("obs") or {}).get("date")
         n, t0 = a.seconds * a.fps, time.time()
         for i in range(n):
-            adm.rcon(f"shotat {target['x']} {target['y']} 960 540 {target['zoom']} cam{seq:05d}/f{i:04d}")
+            adm.rcon(f"shotat {target['x']} {target['y']} {target.get('w', 960)} {target.get('h', 540)} {target['zoom']} "
+                     f"cam{seq:05d}/f{i:04d}")
             time.sleep(max(0.0, (i + 1) / a.fps - (time.time() - t0)))
         time.sleep(1.5)                                   # let the last screenshot finish writing
         mp4 = out / f"seg_{seq}.mp4"
